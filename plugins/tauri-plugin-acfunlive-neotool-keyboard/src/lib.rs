@@ -1,6 +1,6 @@
 mod key;
 
-use std::{any::Any, collections::HashMap, sync::Arc};
+use std::{any::Any, collections::HashMap};
 
 use device_query::{DeviceEvents, DeviceState};
 use enigo::{Enigo, KeyboardControllable};
@@ -85,7 +85,7 @@ async fn stop_listen(manager: State<'_, ListenManager>, id: Id) -> Result<()> {
 }
 
 #[derive(Debug, Default)]
-struct InputManager(Arc<Mutex<Enigo>>);
+struct InputManager(Mutex<Enigo>);
 
 #[command]
 #[inline]
