@@ -856,7 +856,7 @@ function simulate(keyData) {
     });
 }
 const configDir = 'danmaku_keyboard';
-const configFile = 'danmaku_keyboard.conf';
+const configFile = 'danmaku_keyboard.conf.json';
 const fsOption = { dir: F$1.AppConfig };
 function loadConfig() {
     return __awaiter$1(this, void 0, void 0, function* () {

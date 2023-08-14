@@ -61,7 +61,7 @@ export type KeyConfig = { keys: KeyData[] };
 
 const configDir = 'danmaku_keyboard';
 
-const configFile = 'danmaku_keyboard.conf';
+const configFile = 'danmaku_keyboard.conf.json';
 
 const fsOption = { dir: BaseDirectory.AppConfig };
 

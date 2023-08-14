@@ -8,7 +8,7 @@ export type Config = {
   appsDir: string;
 };
 
-const configFile = 'neotool.conf';
+const configFile = 'neotool.conf.json';
 
 const defaultAppsDir = './apps';
 

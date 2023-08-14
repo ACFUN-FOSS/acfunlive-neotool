@@ -8,12 +8,10 @@ use tokio::fs::{read_dir, read_to_string};
 
 type Result<T> = std::result::Result<T, Error>;
 
-const CONFIG_FILE: &str = "neotool.json";
+const CONFIG_FILE: &str = "neotool.app.json";
 
 #[derive(Debug, thiserror::Error)]
 enum Error {
-    /* #[error("apps directory `{0}` does not exist")]
-    AppsDirNotExist(String), */
     #[error(transparent)]
     IoError(#[from] std::io::Error),
     #[error(transparent)]
