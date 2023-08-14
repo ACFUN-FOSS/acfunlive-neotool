@@ -1,0 +1,72 @@
+{
+  "build": {
+    "beforeBuildCommand": "pnpm vite:build",
+    "beforeDevCommand": "pnpm vite:dev",
+    "devPath": "http://localhost:5173",
+    "distDir": "../build"
+  },
+  "package": {
+    "productName": "acfunlive-neotool",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "fs": {
+        "all": true,
+        "scope": [
+          "$APPCONFIG",
+          "$APPDATA",
+          "$APPCACHE",
+          "$APPCONFIG/**",
+          "$APPDATA/**",
+          "$APPCACHE/**"
+        ]
+      },
+      "path": {
+        "all": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "Entertainment",
+      "copyright": "Copyright © 2023 ACFUN-FOSS. All rights reserved.",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": ["icons/icon.ico", "icons/icon.png"],
+      "identifier": "org.acfunfoss.neotool",
+      "shortDescription": "neo toolbox for AcFun live",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "resources": [],
+      "shortDescription": "",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 600,
+        "resizable": true,
+        "title": "acfunlive-neotool",
+        "width": 800
+      }
+    ]
+  }
+}

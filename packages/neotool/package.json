@@ -1,0 +1,46 @@
+{
+  "name": "acfunlive-neotool",
+  "version": "0.1.0",
+  "description": "neo toolbox for AcFun live",
+  "keywords": [
+    "svelte",
+    "acfun",
+    "acfunlive"
+  ],
+  "license": "AGPL-3.0-only",
+  "author": "orzogc",
+  "type": "module",
+  "scripts": {
+    "vite:build": "vite build",
+    "vite:dev": "vite dev",
+    "build": "tauri build",
+    "dev": "tauri dev",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+  },
+  "dependencies": {
+    "@acfunlive-neotool/shared": "link:../shared",
+    "@tauri-apps/api": "^1.4.0",
+    "acfunlive-backend-js": "github:ACFUN-FOSS/acfunlive-backend-js",
+    "tauri-plugin-acfunlive-neotool-base-api": "link:../../plugins/tauri-plugin-acfunlive-neotool-base",
+    "tauri-plugin-websocket-api": "github:orzogc/tauri-plugin-websocket#ac-live-fix"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^2.0.3",
+    "@sveltejs/kit": "^1.22.6",
+    "@tauri-apps/cli": "^1.4.0",
+    "autoprefixer": "^10.4.15",
+    "daisyui": "^3.5.1",
+    "postcss": "^8.4.27",
+    "postcss-load-config": "^4.0.1",
+    "svelte": "^4.2.0",
+    "svelte-check": "^3.5.0",
+    "svelte-preprocess": "^5.0.4",
+    "tailwindcss": "^3.3.3",
+    "tslib": "^2.6.1",
+    "typescript": "^5.1.6",
+    "vite": "^4.4.9"
+  },
+  "packageManager": "pnpm@8.6.11"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@acfunlive-neotool/shared",
+  "version": "0.1.0",
+  "description": "neo toolbox shared package",
+  "keywords": [
+    "svelte",
+    "acfun",
+    "acfunlive"
+  ],
+  "license": "AGPL-3.0-only",
+  "author": "orzogc",
+  "type": "module",
+  "main": "index.ts",
+  "dependencies": {
+    "acfunlive-backend-js": "github:ACFUN-FOSS/acfunlive-backend-js",
+    "svelte": "^4.2.0"
+  },
+  "packageManager": "pnpm@8.6.11"
+}

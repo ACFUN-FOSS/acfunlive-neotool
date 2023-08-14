@@ -1,0 +1,7 @@
+{
+  "id": "danmaku_keyboard",
+  "name": "弹幕键盘",
+  "description": "利用弹幕操纵键盘",
+  "entry": "index.js",
+  "css": "index.css"
+}
