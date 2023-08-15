@@ -1,4 +1,5 @@
 import type { AppShared } from '@acfunlive-neotool/shared';
+import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { BaseDirectory, createDir, exists, readTextFile, writeTextFile } from '@tauri-apps/api/fs';
 import { join } from '@tauri-apps/api/path';
 import {
@@ -44,9 +45,9 @@ export async function loadApp(
   cssPath?: string
 ): Promise<void> {
   if (cssPath) {
-    await import(cssPath);
+    await import(convertFileSrc(cssPath));
   }
-  const module = await import(jsPath);
+  const module = await import(convertFileSrc(jsPath));
   const component = module.default;
 
   new component({
