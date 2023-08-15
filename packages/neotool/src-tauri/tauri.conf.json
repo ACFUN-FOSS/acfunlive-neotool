@@ -1,6 +1,6 @@
 {
   "build": {
-    "beforeBuildCommand": "pnpm vite:build",
+    "beforeBuildCommand": "pnpm vite:build && pnpm vite:build",
     "beforeDevCommand": "pnpm vite:dev",
     "devPath": "http://localhost:5173",
     "distDir": "../build"

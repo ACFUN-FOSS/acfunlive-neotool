@@ -23,7 +23,7 @@ jobs:
           version: 8
       - name: install stable Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: install dependencies (ubuntu only)
+      - name: install dependencies (ubuntu)
         if: matrix.platform == 'ubuntu-latest'
         run: |
           sudo apt-get update
@@ -37,3 +37,19 @@ jobs:
         with:
           projectPath: './packages/neotool'
           tauriScript: 'pnpm'
+      - name: upload artifacts (ubuntu)
+        if: matrix.platform == 'ubuntu-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-artifacts
+          path: |
+            target/release/bundle/deb/acfunlive-neotool*.deb
+            target/release/bundle/appimage/acfunlive-neotool*.AppImage
+      - name: upload artifacts (windows)
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-artifacts
+          path: |
+            target/release/bundle/msi/acfunlive-neotool*.msi
+            target/release/bundle/nsis/acfunlive-neotool*.exe
