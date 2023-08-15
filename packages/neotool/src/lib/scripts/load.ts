@@ -45,7 +45,8 @@ export async function loadApp(
   cssPath?: string
 ): Promise<void> {
   if (cssPath) {
-    await import(convertFileSrc(cssPath));
+    const css = convertFileSrc(cssPath);
+    document.getElementsByTagName('head')[0].insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="${css}" />`)
   }
   const module = await import(convertFileSrc(jsPath));
   const component = module.default;
