@@ -24,6 +24,7 @@
     "@tauri-apps/api": "^1.4.0",
     "acfunlive-backend-js": "github:ACFUN-FOSS/acfunlive-backend-js",
     "tauri-plugin-acfunlive-neotool-base-api": "link:../../plugins/tauri-plugin-acfunlive-neotool-base",
+    "tauri-plugin-acfunlive-neotool-keyboard-api": "link:../../plugins/tauri-plugin-acfunlive-neotool-keyboard",
     "tauri-plugin-websocket-api": "github:orzogc/tauri-plugin-websocket#ac-live-fix"
   },
   "devDependencies": {

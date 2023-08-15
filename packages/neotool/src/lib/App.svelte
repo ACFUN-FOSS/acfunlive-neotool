@@ -4,13 +4,12 @@
   import { default as tauriSession } from 'acfunlive-backend-js/tauri.js';
   import { onDestroy } from 'svelte';
   import { writable, get, readonly, type Writable } from 'svelte/store';
-  import type { AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
 
-  import { type Config, loadConfig, saveConfig, loadApps } from './scripts/load';
+  import { type Config, loadConfig, saveConfig } from './scripts/load';
 
   import LiverUIDDialog from '$lib/components/LiverUIDDialog.svelte';
   import Avatar from './components/Avatar.svelte';
-  import SubApp from './components/SubApp.svelte';
+  import Keyboard from './components/keyboard/App.svelte';
 
   let config: Config | undefined;
 
@@ -18,22 +17,9 @@
 
   $: config && saveConfig(config).catch((e) => console.log(`failed to save config: ${e}`));
 
-  let appsConfigs: AppConfig[] | undefined;
-
-  const enableApps: { [name: string]: Writable<boolean> } = {};
-
-  let selectedApp = 0;
-
-  $: if (config?.appsDir && !appsConfigs) {
-    loadApps(config.appsDir)
-      .then((configs) => {
-        appsConfigs = configs;
-        for (const config of configs) {
-          enableApps[config.id] = writable(true);
-        }
-      })
-      .catch((e) => console.log(`failed to load Apps config: ${e}`));
-  }
+  const enableApps: { [name: string]: Writable<boolean> } = {
+    danmaku_keyboard: writable(true)
+  };
 
   type SessionData = {
     id: number;
@@ -215,45 +201,34 @@
   </div>
 </div>
 <div class="divider h-0 my-0"></div>
-{#if appsConfigs && appsConfigs.length > 0}
-  <div class="drawer drawer-open">
-    <input type="checkbox" class="drawer-toggle" />
-    <div class="drawer-side">
-      <ul class="menu">
-        {#each appsConfigs as appConfig, i (appConfig.id)}
-          <li>
-            <div class="flex flex-row" class:active={selectedApp === i}>
-              <button class="btn btn-ghost" on:click={() => (selectedApp = i)}
-                >{appConfig.name}</button
-              >
-              <input
-                type="checkbox"
-                class="toggle toggle-sm"
-                checked={get(enableApps[appConfig.id])}
-                on:change={(e) => enableApps[appConfig.id].update(() => e.currentTarget.checked)}
-              />
-            </div>
-          </li>
-        {/each}
-      </ul>
-    </div>
-    <div class="drawer-content">
-      {#each appsConfigs as appConfig, i (appConfig.id)}
-        <div class:hidden={selectedApp !== i}>
-          <SubApp
-            config={appConfig}
-            shared={{
-              session: session.session,
-              data: {
-                state: readonly(state),
-                token: readonly(token),
-                userInfo: readonly(userInfo)
-              },
-              enable: readonly(enableApps[appConfig.id])
-            }}
-          ></SubApp>
+<div class="drawer drawer-open">
+  <input type="checkbox" class="drawer-toggle" />
+  <div class="drawer-side">
+    <ul class="menu">
+      <li>
+        <div class="flex flex-row active">
+          <button class="btn btn-ghost">弹幕键盘</button>
+          <input
+            type="checkbox"
+            class="toggle toggle-sm"
+            checked={get(enableApps['danmaku_keyboard'])}
+            on:change={(e) => enableApps['danmaku_keyboard'].update(() => e.currentTarget.checked)}
+          />
         </div>
-      {/each}
-    </div>
+      </li>
+    </ul>
   </div>
-{/if}
+  <div class="drawer-content">
+    <Keyboard
+      shared={{
+        session: session.session,
+        data: {
+          state: readonly(state),
+          token: readonly(token),
+          userInfo: readonly(userInfo)
+        },
+        enable: readonly(enableApps['danmaku_keyboard'])
+      }}
+    ></Keyboard>
+  </div>
+</div>

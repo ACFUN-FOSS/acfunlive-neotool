@@ -105,6 +105,9 @@ importers:
       tauri-plugin-acfunlive-neotool-base-api:
         specifier: link:../../plugins/tauri-plugin-acfunlive-neotool-base
         version: link:../../plugins/tauri-plugin-acfunlive-neotool-base
+      tauri-plugin-acfunlive-neotool-keyboard-api:
+        specifier: link:../../plugins/tauri-plugin-acfunlive-neotool-keyboard
+        version: link:../../plugins/tauri-plugin-acfunlive-neotool-keyboard
       tauri-plugin-websocket-api:
         specifier: github:orzogc/tauri-plugin-websocket#ac-live-fix
         version: github.com/orzogc/tauri-plugin-websocket/3903bb4b99d37eed6c1744c9f5220ee4bcab674b
