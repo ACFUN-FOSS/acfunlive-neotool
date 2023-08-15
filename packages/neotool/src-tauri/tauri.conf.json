@@ -19,7 +19,8 @@
           "$APPCACHE",
           "$APPCONFIG/**",
           "$APPDATA/**",
-          "$APPCACHE/**"
+          "$APPCACHE/**",
+          "$RESOURCE/*"
         ]
       },
       "path": {
@@ -44,8 +45,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
-      "shortDescription": "",
+      "resources": ["../apps/*/index.css", "../apps/*/index.js", "../apps/*/neotool.app.json"],
       "targets": "all",
       "windows": {
         "certificateThumbprint": null,

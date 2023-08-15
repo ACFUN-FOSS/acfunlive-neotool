@@ -2,9 +2,9 @@
   import type { AppShared } from '@acfunlive-neotool/shared';
   import { onDestroy } from 'svelte';
 
-  import { loadConfig, saveConfig, keysToRegex, simulate, type KeyConfig } from './key';
-  import KeyData from './Key.svelte';
-  import Input from './Input.svelte';
+  import { loadConfig, saveConfig, keysToRegex, simulate, type KeyConfig } from './scripts/key';
+  import KeyData from './components/Key.svelte';
+  import Input from './components/Input.svelte';
 
   import './app.css';
 

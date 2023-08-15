@@ -95,5 +95,5 @@ export function keysToString(keys: Input[]): string {
 }
 
 export function keysToRegex(keys: KeyData[]): RegExp {
-  return new RegExp(keys.map((key) => `@(${key.danmaku})[ ]?`).join('|'), 'i');
+  return new RegExp(keys.map((key) => `@(${key.danmaku})`).join('|'), 'i');
 }

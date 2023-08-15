@@ -1,8 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
-  import { KeyData, keysToString } from './key';
-  import { trashIcon, editIcon } from './svg';
+  import { KeyData, keysToString } from '../scripts/key';
+  import { trashIcon, editIcon } from '../scripts/svg';
   import Input from './Input.svelte';
 
   export let key: KeyData;

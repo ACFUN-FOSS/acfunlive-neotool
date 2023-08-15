@@ -2,7 +2,7 @@
   import { KeyboardListener, type Input } from 'tauri-plugin-acfunlive-neotool-keyboard-api';
   import { createEventDispatcher, onDestroy } from 'svelte';
 
-  import { KeyData, keysToString } from './key';
+  import { KeyData, keysToString } from '../scripts/key';
 
   export let isOpen: boolean;
 
