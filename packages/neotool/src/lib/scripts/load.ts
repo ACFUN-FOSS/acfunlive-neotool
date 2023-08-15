@@ -1,7 +1,7 @@
 import type { AppShared } from '@acfunlive-neotool/shared';
 import { BaseDirectory, createDir, exists, readTextFile, writeTextFile } from '@tauri-apps/api/fs';
 import { join } from '@tauri-apps/api/path';
-import { loadAppsConfig, type AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
+import { loadAppsConfig, canonicalize, type AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
 
 export type Config = {
   liverUID?: number;
@@ -54,9 +54,9 @@ export async function loadApp(
 export async function loadApps(appsDir: string): Promise<AppConfig[]> {
   const configs = await loadAppsConfig(appsDir);
   for (const config of configs) {
-    config.entry = await join(config.path, config.entry);
+    config.entry = await canonicalize(await join(config.path, config.entry));
     if (config.css) {
-      config.css = await join(config.path, config.css);
+      config.css = await canonicalize(await join(config.path, config.css));
     }
   }
 

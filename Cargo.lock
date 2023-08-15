@@ -2870,6 +2870,7 @@ dependencies = [
 name = "tauri-plugin-acfunlive-neotool-base"
 version = "0.1.0"
 dependencies = [
+ "dunce",
  "serde",
  "serde_json",
  "tauri",

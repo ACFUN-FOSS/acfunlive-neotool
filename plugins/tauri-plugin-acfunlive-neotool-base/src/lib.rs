@@ -62,8 +62,7 @@ async fn load_apps_config(apps_dir: String) -> Result<Vec<AppConfig>> {
 
 #[command]
 async fn canonicalize(path: String) -> Result<String> {
-    Ok(tokio::fs::canonicalize(path)
-        .await?
+    Ok(dunce::simplified(&tokio::fs::canonicalize(path).await?)
         .to_string_lossy()
         .into_owned())
 }
