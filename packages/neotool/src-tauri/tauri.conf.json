@@ -25,6 +25,10 @@
       },
       "path": {
         "all": true
+      },
+      "protocol": {
+        "asset": true,
+        "assetScope": ["$RESOURCE/**"]
       }
     },
     "bundle": {

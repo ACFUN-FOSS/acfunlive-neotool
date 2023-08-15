@@ -1,7 +1,11 @@
 import type { AppShared } from '@acfunlive-neotool/shared';
 import { BaseDirectory, createDir, exists, readTextFile, writeTextFile } from '@tauri-apps/api/fs';
 import { join } from '@tauri-apps/api/path';
-import { loadAppsConfig, canonicalize, type AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
+import {
+  loadAppsConfig,
+  canonicalize,
+  type AppConfig
+} from 'tauri-plugin-acfunlive-neotool-base-api';
 
 export type Config = {
   liverUID?: number;
