@@ -20,7 +20,8 @@
           "$APPCONFIG/**",
           "$APPDATA/**",
           "$APPCACHE/**",
-          "$RESOURCE/**"
+          "$RESOURCE/**",
+          "**"
         ]
       },
       "path": {
@@ -28,7 +29,7 @@
       },
       "protocol": {
         "asset": true,
-        "assetScope": ["$RESOURCE/**"]
+        "assetScope": ["$RESOURCE/**", "**"]
       }
     },
     "bundle": {
