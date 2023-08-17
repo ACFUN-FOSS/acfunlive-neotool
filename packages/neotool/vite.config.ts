@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [sveltekit()],
   server: {
     fs: {
-      allow: ['apps', '../shared', '../../apps', '../../plugins']
+      allow: ['src-tauri/apps', '../shared', '../../apps', '../../plugins']
     }
   }
 });

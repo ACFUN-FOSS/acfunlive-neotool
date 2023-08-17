@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { SessionState, type UserInfo } from '@acfunlive-neotool/shared';
+  import type { SessionState, UserInfo } from '@acfunlive-neotool/shared';
   import { createEventDispatcher } from 'svelte';
 
   export let state: SessionState;
@@ -11,23 +11,18 @@
   let stateClass = '';
   let stateText = '';
 
-  $: switch (state) {
-    case SessionState.Disconnect:
-      stateClass = 'badge-error';
-      stateText = '未连接后端';
-      break;
-    case SessionState.Connect:
-      stateClass = 'badge-warning';
-      stateText = '未登陆';
-      break;
-    case SessionState.Login:
-      stateClass = userInfo ? 'badge-neutral' : 'badge-warning';
-      stateText = userInfo ? '未开播' : '未登陆';
-      break;
-    case SessionState.GetDanmaku:
-      stateClass = 'badge-success';
-      stateText = '正在直播';
-      break;
+  $: if (!state.isConnect()) {
+    stateClass = 'badge-error';
+    stateText = '未连接后端';
+  } else if (!state.isLogin()) {
+    stateClass = 'badge-warning';
+    stateText = '未登陆';
+  } else if (!state.isGetDanmaku()) {
+    stateClass = userInfo ? 'badge-neutral' : 'badge-warning';
+    stateText = userInfo ? '未开播' : '未登陆';
+  } else {
+    stateClass = 'badge-success';
+    stateText = '正在直播';
   }
 </script>
 

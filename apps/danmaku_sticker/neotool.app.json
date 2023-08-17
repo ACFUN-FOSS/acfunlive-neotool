@@ -1,0 +1,7 @@
+{
+  "id": "danmaku_sticker",
+  "name": "弹幕表情",
+  "description": "在直播屏幕上显示弹幕表情",
+  "entry": "index.js",
+  "css": "index.css"
+}

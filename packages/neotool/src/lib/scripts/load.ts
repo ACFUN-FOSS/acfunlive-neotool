@@ -45,12 +45,18 @@ export async function loadApp(
   cssPath?: string
 ): Promise<void> {
   if (cssPath) {
-    const css = convertFileSrc(cssPath);
-    document
-      .getElementsByTagName('head')[0]
-      .insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="${css}" />`);
+    if (import.meta.env?.DEV) {
+      await import(/* @vite-ignore */ cssPath);
+    } else {
+      const css = convertFileSrc(cssPath);
+      document
+        .getElementsByTagName('head')[0]
+        .insertAdjacentHTML('beforeend', `<link rel="stylesheet" href="${css}" />`);
+    }
   }
-  const module = await import(convertFileSrc(jsPath));
+  const module = import.meta.env?.DEV
+    ? await import(/* @vite-ignore */ jsPath)
+    : await import(/* @vite-ignore */ convertFileSrc(jsPath));
   const component = module.default;
 
   new component({

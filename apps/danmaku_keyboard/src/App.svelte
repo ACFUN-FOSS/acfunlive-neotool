@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AppShared } from '@acfunlive-neotool/shared';
+  import type { AppShared, UserInfo } from '@acfunlive-neotool/shared';
   import { onDestroy } from 'svelte';
 
   import { loadConfig, saveConfig, keysToRegex, simulate, type KeyConfig } from './scripts/key';
@@ -11,6 +11,8 @@
   export let shared: AppShared;
 
   const enable = shared.enable;
+
+  const userInfoMap = shared.data.userInfoMap;
 
   let config: KeyConfig | undefined;
 
@@ -31,27 +33,53 @@
     .then((c) => (config = c))
     .catch((e) => console.log(`failed to load danmaku_keyboard config: ${e}`));
 
-  const unsubscribe = shared.session.on('comment', (damaku) => {
-    if ($enable && regex) {
-      let match = damaku.data.content.match(regex);
-      if (match) {
-        for (const [i, group] of match.slice(1).entries()) {
-          if (group) {
-            const key = config?.keys[i];
-            if (key?.enable) {
-              simulate(key).catch((e) => console.log(`failed to simulate keyboard input: ${e}`));
-              return;
+  let userInfo: UserInfo | undefined;
+  $: userInfo = $userInfoMap.get(0);
+
+  let unsubscribe: (() => void) | undefined;
+
+  $: {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = undefined;
+    }
+
+    if (userInfo) {
+      unsubscribe = shared.session.on(
+        'comment',
+        (damaku) => {
+          if ($enable && regex) {
+            let match = damaku.data.content.match(regex);
+            if (match) {
+              for (const [i, group] of match.slice(1).entries()) {
+                if (group) {
+                  const key = config?.keys[i];
+                  if (key?.enable) {
+                    simulate(key).catch((e) =>
+                      console.log(`failed to simulate keyboard input: ${e}`)
+                    );
+                    return;
+                  }
+                }
+              }
             }
           }
-        }
-      }
+        },
+        userInfo.userID
+      );
+    }
+  }
+
+  onDestroy(() => {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = undefined;
     }
   });
-
-  onDestroy(unsubscribe);
 </script>
 
-<div class="flex flex-col content-between p-5 space-y-5 overflow-auto">
+<div class="flex flex-col content-between p-5 space-y-5">
+  <div>弹幕前面需要加 @ 符号来触发</div>
   {#if config}
     <table class="table table-zebra">
       <thead>

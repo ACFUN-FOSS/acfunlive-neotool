@@ -1,0 +1,12 @@
+[package]
+name = "tauri-plugin-acfunlive-neotool-serve-file"
+version = "0.1.0"
+authors.workspace = true
+license.workspace = true
+description = "acfunlive-neotool tauri plugin for serving html files"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+file-serve = "0.2.4"
+tauri = { version = "1.4.1" }

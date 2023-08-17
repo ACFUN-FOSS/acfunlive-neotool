@@ -15,9 +15,16 @@ tauri-build = { version = "1.4.0", features = [] }
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
-tauri = { version = "1.4.1", features = [ "devtools", "fs-all", "linux-protocol-headers", "path-all", "protocol-asset"] }
-tauri-plugin-acfunlive-neotool-base = { version = "0.1.0", path = "../../../plugins/tauri-plugin-acfunlive-neotool-base" }
-tauri-plugin-acfunlive-neotool-keyboard = { version = "0.1.0", path = "../../../plugins/tauri-plugin-acfunlive-neotool-keyboard" }
+tauri = { version = "1.4.1", features = [
+  "devtools",
+  "fs-all",
+  "linux-protocol-headers",
+  "path-all",
+  "protocol-asset",
+] }
+tauri-plugin-acfunlive-neotool-base = { version = "0.1.0", path = "../../../plugins/base" }
+tauri-plugin-acfunlive-neotool-keyboard = { version = "0.1.0", path = "../../../plugins/keyboard" }
+tauri-plugin-acfunlive-neotool-serve-file = { version = "0.1.0", path = "../../../plugins/serve_file" }
 tauri-plugin-websocket = { git = "https://github.com/orzogc/plugins-workspace.git", branch = "ac-live-fix" }
 
 [features]

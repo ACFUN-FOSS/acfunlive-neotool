@@ -1,6 +1,5 @@
 <script lang="ts">
-  import type { Session, loginResponse } from 'acfunlive-backend-js/tauri.js';
-  import { SessionState, type UserInfo } from '@acfunlive-neotool/shared';
+  import { type UserInfo, SessionData } from '@acfunlive-neotool/shared';
   import { default as tauriSession } from 'acfunlive-backend-js/tauri.js';
   import { onDestroy } from 'svelte';
   import { writable, get, readonly, type Writable } from 'svelte/store';
@@ -35,138 +34,22 @@
       .catch((e) => console.log(`failed to load Apps config: ${e}`));
   }
 
-  type SessionData = {
-    id: number;
-    session: Session;
-  };
+  const session = new SessionData(tauriSession());
 
-  const session: SessionData = {
-    id: 0,
-    session: tauriSession()
-  };
+  const state = session.state;
 
-  const state: Writable<SessionState> = writable(SessionState.Disconnect);
+  const token = session.token;
 
-  const token: Writable<loginResponse | undefined> = writable(undefined);
+  const userInfoMap = session.userInfoMap;
 
-  const userInfo: Writable<UserInfo | undefined> = writable(undefined);
+  let userInfo: UserInfo | undefined;
+  $: userInfo = $userInfoMap.get(0);
 
-  async function getDanmaku(id: number) {
-    if (
-      session.session.isConnecting() &&
-      $token &&
-      session.id === id &&
-      $state === SessionState.Login
-    ) {
-      if (config?.liverUID) {
-        try {
-          const info = (
-            await session.session.asyncRequest('getUserInfo', {
-              userID: config.liverUID
-            })
-          ).data;
-          if (
-            session.session.isConnecting() &&
-            $token &&
-            session.id === id &&
-            $state === SessionState.Login
-          ) {
-            const user = $userInfo;
-            if (
-              !user ||
-              user.userID !== info.userID ||
-              user.nickname !== info.nickname ||
-              user.avatar !== info.avatar
-            ) {
-              $userInfo = info;
-            }
+  const cleanup = session.connect();
 
-            if (config?.liverUID && info.liveID.length !== 0) {
-              await session.session.asyncRequest('getDanmaku', { liverUID: config.liverUID });
-              $state = SessionState.GetDanmaku;
-
-              return;
-            }
-          } else {
-            return;
-          }
-        } catch {}
-      }
-
-      setTimeout(() => getDanmaku(id), 10000);
-    }
+  $: if (config?.liverUID && $state.isConnect() && $state.isLogin() && !$state.isGetDanmaku()) {
+    session.getDanmakuCyclically(config.liverUID, true);
   }
-
-  async function getNewDanmaku(id: number, oldLiverUID: number) {
-    if (
-      session.session.isConnecting() &&
-      config?.liverUID &&
-      $token &&
-      $userInfo &&
-      session.id === id &&
-      $state === SessionState.GetDanmaku
-    ) {
-      try {
-        await session.session.asyncRequest('stopDanmaku', { liverUID: oldLiverUID });
-
-        return;
-      } catch {}
-
-      setTimeout(() => getNewDanmaku(id, oldLiverUID), 10000);
-    }
-  }
-
-  async function login(id: number) {
-    if (session.session.isConnecting() && session.id === id && $state === SessionState.Connect) {
-      try {
-        let userToken = (await session.session.asyncRequest('login', { account: '', password: '' }))
-          .data;
-        if (
-          session.session.isConnecting() &&
-          session.id === id &&
-          $state === SessionState.Connect
-        ) {
-          $token = userToken;
-          $state = SessionState.Login;
-          getDanmaku(id);
-        }
-
-        return;
-      } catch {
-        setTimeout(() => login(id), 10000);
-      }
-    }
-  }
-
-  session.session.connect();
-  const openUnsubscribe = session.session.on('websocketOpen', () => {
-    session.id += 1;
-    $state = SessionState.Connect;
-    $token = undefined;
-    login(session.id);
-  });
-  const closeUnsubscribe = session.session.on('websocketClose', () => {
-    // 断开会自动重连
-    $state = SessionState.Disconnect;
-    $token = undefined;
-  });
-  const errorUnsubscribe = session.session.on('websocketError', () => {
-    // 出现错误会断开重连
-    $state = SessionState.Disconnect;
-    $token = undefined;
-  });
-  const danmakuStopUnsubscribe = session.session.on('danmakuStop', (_) => {
-    if (session.session.isConnecting() && $state === SessionState.GetDanmaku) {
-      $state = SessionState.Login;
-      getDanmaku(session.id);
-    }
-  });
-  const danmakuStopErrorUnsubscribe = session.session.on('danmakuStopError', (_) => {
-    if (session.session.isConnecting() && $state === SessionState.GetDanmaku) {
-      $state = SessionState.Login;
-      getDanmaku(session.id);
-    }
-  });
 
   loadConfig()
     .then((conf) => {
@@ -175,16 +58,7 @@
     })
     .catch((e) => console.log(`failed to load config: ${e}`));
 
-  onDestroy(() => {
-    $state = SessionState.Disconnect;
-    $token = undefined;
-    openUnsubscribe();
-    closeUnsubscribe();
-    errorUnsubscribe();
-    danmakuStopUnsubscribe();
-    danmakuStopErrorUnsubscribe();
-    session.session.disConnect();
-  });
+  onDestroy(cleanup);
 </script>
 
 {#if !config?.liverUID || openUIDDialog}
@@ -197,7 +71,8 @@
           if (config.liverUID != uid.detail) {
             const oldLiverUID = config.liverUID;
             config.liverUID = uid.detail;
-            getNewDanmaku(session.id, oldLiverUID);
+            // 停止获取弹幕后会重新获取弹幕
+            session.stopDanmakuCyclically(oldLiverUID);
           }
         } else {
           config.liverUID = uid.detail;
@@ -207,19 +82,17 @@
   />
 {/if}
 
-<div class="sticky top-0 z-30 backdrop-blur w-full">
-  <div class="flex flex-row justify-between items-center h-16 mx-5">
-    <h1>AcFun Neo 直播工具箱</h1>
-    <Avatar state={$state} userInfo={$userInfo} on:openUIDDialog={() => (openUIDDialog = true)}
-    ></Avatar>
-  </div>
+<div class="flex flex-row justify-between items-center h-16 mx-5">
+  <h1>AcFun Neo 直播工具箱</h1>
+  <Avatar state={$state} {userInfo} on:openUIDDialog={() => (openUIDDialog = true)}></Avatar>
 </div>
 <div class="divider h-0 my-0"></div>
+
 {#if appsConfigs && appsConfigs.length > 0}
   <div class="drawer drawer-open">
     <input type="checkbox" class="drawer-toggle" />
     <div class="drawer-side">
-      <ul class="menu">
+      <ul class="menu space-y-2">
         {#each appsConfigs as appConfig, i (appConfig.id)}
           <li>
             <div class="flex flex-row" class:active={selectedApp === i}>
@@ -247,7 +120,7 @@
               data: {
                 state: readonly(state),
                 token: readonly(token),
-                userInfo: readonly(userInfo)
+                userInfoMap: readonly(userInfoMap)
               },
               enable: readonly(enableApps[appConfig.id])
             }}

@@ -1642,13 +1642,13 @@ class Key extends SvelteComponent {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[12] = list[i];
-	child_ctx[13] = list;
-	child_ctx[14] = i;
+	child_ctx[15] = list[i];
+	child_ctx[16] = list;
+	child_ctx[17] = i;
 	return child_ctx;
 }
 
-// (43:2) {#if config}
+// (61:2) {#if config}
 function create_if_block_1(ctx) {
 	let table;
 	let thead;
@@ -1750,24 +1750,24 @@ function create_if_block_1(ctx) {
 	};
 }
 
-// (55:8) {#each config.keys as key, i}
+// (73:8) {#each config.keys as key, i}
 function create_each_block(ctx) {
 	let keydata;
 	let updating_key;
 	let current;
 
 	function keydata_key_binding(value) {
-		/*keydata_key_binding*/ ctx[4](value, /*key*/ ctx[12], /*each_value*/ ctx[13], /*i*/ ctx[14]);
+		/*keydata_key_binding*/ ctx[10](value, /*key*/ ctx[15], /*each_value*/ ctx[16], /*i*/ ctx[17]);
 	}
 
 	function delete_handler() {
-		return /*delete_handler*/ ctx[5](/*i*/ ctx[14]);
+		return /*delete_handler*/ ctx[11](/*i*/ ctx[17]);
 	}
 
 	let keydata_props = {};
 
-	if (/*key*/ ctx[12] !== void 0) {
-		keydata_props.key = /*key*/ ctx[12];
+	if (/*key*/ ctx[15] !== void 0) {
+		keydata_props.key = /*key*/ ctx[15];
 	}
 
 	keydata = new Key({ props: keydata_props });
@@ -1788,7 +1788,7 @@ function create_each_block(ctx) {
 
 			if (!updating_key && dirty & /*config*/ 1) {
 				updating_key = true;
-				keydata_changes.key = /*key*/ ctx[12];
+				keydata_changes.key = /*key*/ ctx[15];
 				add_flush_callback(() => updating_key = false);
 			}
 
@@ -1809,14 +1809,14 @@ function create_each_block(ctx) {
 	};
 }
 
-// (71:0) {#if openInput}
+// (89:0) {#if openInput}
 function create_if_block(ctx) {
 	let input;
 	let updating_isOpen;
 	let current;
 
 	function input_isOpen_binding(value) {
-		/*input_isOpen_binding*/ ctx[7](value);
+		/*input_isOpen_binding*/ ctx[13](value);
 	}
 
 	let input_props = {};
@@ -1827,7 +1827,7 @@ function create_if_block(ctx) {
 
 	input = new Input({ props: input_props });
 	binding_callbacks.push(() => bind(input, 'isOpen', input_isOpen_binding));
-	input.$on("key", /*key_handler*/ ctx[8]);
+	input.$on("key", /*key_handler*/ ctx[14]);
 
 	return {
 		c() {
@@ -1864,10 +1864,12 @@ function create_if_block(ctx) {
 }
 
 function create_fragment(ctx) {
-	let div;
-	let t0;
-	let button;
+	let div1;
+	let div0;
+	let t1;
 	let t2;
+	let button;
+	let t4;
 	let if_block1_anchor;
 	let current;
 	let mounted;
@@ -1877,29 +1879,34 @@ function create_fragment(ctx) {
 
 	return {
 		c() {
-			div = element("div");
+			div1 = element("div");
+			div0 = element("div");
+			div0.textContent = "弹幕前面需要加 @ 符号来触发";
+			t1 = space();
 			if (if_block0) if_block0.c();
-			t0 = space();
+			t2 = space();
 			button = element("button");
 			button.textContent = "+";
-			t2 = space();
+			t4 = space();
 			if (if_block1) if_block1.c();
 			if_block1_anchor = empty();
 			attr(button, "class", "btn btn-primary text-3xl");
-			attr(div, "class", "flex flex-col content-between p-5 space-y-5 overflow-auto");
+			attr(div1, "class", "flex flex-col content-between p-5 space-y-5");
 		},
 		m(target, anchor) {
-			insert(target, div, anchor);
-			if (if_block0) if_block0.m(div, null);
-			append(div, t0);
-			append(div, button);
-			insert(target, t2, anchor);
+			insert(target, div1, anchor);
+			append(div1, div0);
+			append(div1, t1);
+			if (if_block0) if_block0.m(div1, null);
+			append(div1, t2);
+			append(div1, button);
+			insert(target, t4, anchor);
 			if (if_block1) if_block1.m(target, anchor);
 			insert(target, if_block1_anchor, anchor);
 			current = true;
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*click_handler*/ ctx[6]);
+				dispose = listen(button, "click", /*click_handler*/ ctx[12]);
 				mounted = true;
 			}
 		},
@@ -1915,7 +1922,7 @@ function create_fragment(ctx) {
 					if_block0 = create_if_block_1(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
-					if_block0.m(div, t0);
+					if_block0.m(div1, t2);
 				}
 			} else if (if_block0) {
 				group_outros();
@@ -1963,8 +1970,8 @@ function create_fragment(ctx) {
 		},
 		d(detaching) {
 			if (detaching) {
-				detach(div);
-				detach(t2);
+				detach(div1);
+				detach(t4);
 				detach(if_block1_anchor);
 			}
 
@@ -1978,36 +1985,25 @@ function create_fragment(ctx) {
 
 function instance($$self, $$props, $$invalidate) {
 	let $enable;
+	let $userInfoMap;
 	let { shared } = $$props;
 	const enable = shared.enable;
-	component_subscribe($$self, enable, value => $$invalidate(10, $enable = value));
+	component_subscribe($$self, enable, value => $$invalidate(8, $enable = value));
+	const userInfoMap = shared.data.userInfoMap;
+	component_subscribe($$self, userInfoMap, value => $$invalidate(9, $userInfoMap = value));
 	let config;
 	let regex;
 	let openInput = false;
 	loadConfig().then(c => $$invalidate(0, config = c)).catch(e => console.log(`failed to load danmaku_keyboard config: ${e}`));
+	let userInfo;
+	let unsubscribe;
 
-	const unsubscribe = shared.session.on('comment', damaku => {
-		if ($enable && regex) {
-			let match = damaku.data.content.match(regex);
-
-			if (match) {
-				for (const [i, group] of match.slice(1).entries()) {
-					if (group) {
-						const key = config === null || config === void 0
-						? void 0
-						: config.keys[i];
-
-						if (key === null || key === void 0 ? void 0 : key.enable) {
-							simulate(key).catch(e => console.log(`failed to simulate keyboard input: ${e}`));
-							return;
-						}
-					}
-				}
-			}
+	onDestroy(() => {
+		if (unsubscribe) {
+			unsubscribe();
+			$$invalidate(7, unsubscribe = undefined);
 		}
 	});
-
-	onDestroy(unsubscribe);
 
 	function keydata_key_binding(value, key, each_value, i) {
 		each_value[i] = value;
@@ -2034,7 +2030,7 @@ function instance($$self, $$props, $$invalidate) {
 	};
 
 	$$self.$$set = $$props => {
-		if ('shared' in $$props) $$invalidate(3, shared = $$props.shared);
+		if ('shared' in $$props) $$invalidate(4, shared = $$props.shared);
 	};
 
 	$$self.$$.update = () => {
@@ -2043,9 +2039,49 @@ function instance($$self, $$props, $$invalidate) {
 				saveConfig(config).catch(e => console.log(`failed to save danmaku_keyboard config: ${e}`));
 
 				if (config.keys.length > 0) {
-					regex = keysToRegex(config.keys);
+					$$invalidate(5, regex = keysToRegex(config.keys));
 				} else {
-					regex = undefined;
+					$$invalidate(5, regex = undefined);
+				}
+			}
+		}
+
+		if ($$self.$$.dirty & /*$userInfoMap*/ 512) {
+			$$invalidate(6, userInfo = $userInfoMap.get(0));
+		}
+
+		if ($$self.$$.dirty & /*unsubscribe, userInfo, shared, $enable, regex, config*/ 497) {
+			{
+				if (unsubscribe) {
+					unsubscribe();
+					$$invalidate(7, unsubscribe = undefined);
+				}
+
+				if (userInfo) {
+					$$invalidate(7, unsubscribe = shared.session.on(
+						'comment',
+						damaku => {
+							if ($enable && regex) {
+								let match = damaku.data.content.match(regex);
+
+								if (match) {
+									for (const [i, group] of match.slice(1).entries()) {
+										if (group) {
+											const key = config === null || config === void 0
+											? void 0
+											: config.keys[i];
+
+											if (key === null || key === void 0 ? void 0 : key.enable) {
+												simulate(key).catch(e => console.log(`failed to simulate keyboard input: ${e}`));
+												return;
+											}
+										}
+									}
+								}
+							}
+						},
+						userInfo.userID
+					));
 				}
 			}
 		}
@@ -2055,7 +2091,13 @@ function instance($$self, $$props, $$invalidate) {
 		config,
 		openInput,
 		enable,
+		userInfoMap,
 		shared,
+		regex,
+		userInfo,
+		unsubscribe,
+		$enable,
+		$userInfoMap,
 		keydata_key_binding,
 		delete_handler,
 		click_handler,
@@ -2067,7 +2109,7 @@ function instance($$self, $$props, $$invalidate) {
 class App extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance, create_fragment, safe_not_equal, { shared: 3 });
+		init(this, options, instance, create_fragment, safe_not_equal, { shared: 4 });
 	}
 }
 

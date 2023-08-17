@@ -23,7 +23,8 @@
     "@acfunlive-neotool/shared": "link:../shared",
     "@tauri-apps/api": "^1.4.0",
     "acfunlive-backend-js": "github:ACFUN-FOSS/acfunlive-backend-js",
-    "tauri-plugin-acfunlive-neotool-base-api": "link:../../plugins/tauri-plugin-acfunlive-neotool-base",
+    "svelte": "^4.2.0",
+    "tauri-plugin-acfunlive-neotool-base-api": "link:../../plugins/base",
     "tauri-plugin-websocket-api": "github:orzogc/tauri-plugin-websocket#ac-live-fix"
   },
   "devDependencies": {
@@ -32,9 +33,8 @@
     "@tauri-apps/cli": "^1.4.0",
     "autoprefixer": "^10.4.15",
     "daisyui": "^3.5.1",
-    "postcss": "^8.4.27",
+    "postcss": "^8.4.28",
     "postcss-load-config": "^4.0.1",
-    "svelte": "^4.2.0",
     "svelte-check": "^3.5.0",
     "svelte-preprocess": "^5.0.4",
     "tailwindcss": "^3.3.3",

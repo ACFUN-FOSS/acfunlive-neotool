@@ -1,7 +1,7 @@
 {
-  "name": "@acfunlive-neotool/danmaku_keyboard",
+  "name": "@acfunlive-neotool/danmaku_sticker",
   "version": "0.1.0",
-  "description": "controll keyboard by danmaku in acfunlive-neotool",
+  "description": "danmaku sticker for AcFun live",
   "keywords": [
     "svelte",
     "acfun",
@@ -19,8 +19,7 @@
   "dependencies": {
     "@acfunlive-neotool/shared": "link:../../packages/shared",
     "@tauri-apps/api": "^1.4.0",
-    "svelte": "^4.2.0",
-    "tauri-plugin-acfunlive-neotool-keyboard-api": "link:../../plugins/keyboard"
+    "svelte": "^4.2.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.0",
