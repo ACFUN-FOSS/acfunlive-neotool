@@ -52,8 +52,14 @@ async fn load_apps_config(apps_dir: String) -> Result<Vec<AppConfig>> {
             path.push(CONFIG_FILE);
             let data = read_to_string(&path).await?;
             let mut config: AppConfig = serde_json::from_str(&data)?;
-            config.path = dir;
-            configs.push(config);
+            if !config.id.is_empty()
+                && !config.name.is_empty()
+                && !config.entry.is_empty()
+                && !config.css.as_deref().unwrap_or(" ").is_empty()
+            {
+                config.path = dir;
+                configs.push(config);
+            }
         }
     }
 

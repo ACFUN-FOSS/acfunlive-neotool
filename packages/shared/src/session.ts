@@ -2,81 +2,180 @@ import type {
   Session,
   loginRequest,
   tokenInfo,
-  getUserInfoResponse
+  getUserInfoResponse,
+  streamInfo
 } from 'acfunlive-backend-js/tauri.js';
-import { writable, get, type Writable } from 'svelte/store';
+import { writable, get, readonly, type Writable } from 'svelte/store';
 
 import { SessionState } from './state.js';
 
-export type UserInfo = {
-  userID: number;
-  nickname: string;
-  avatar: string;
-};
+export type LoginData = loginRequest;
+
+export type TokenInfo = tokenInfo;
+
+export type UserInfo = getUserInfoResponse;
+
+export type StreamInfo = streamInfo;
 
 export class SessionData {
-  id: number;
-  session: Session;
-  state: Writable<SessionState>;
-  loginInfo: Writable<loginRequest | undefined>;
-  token: Writable<tokenInfo | undefined>;
-  /** key为0时是主播的信息 */
-  userInfoMap: Writable<Map<number, UserInfo>>;
+  #id: number;
 
-  constructor(session: Session, loginInfo?: loginRequest) {
-    this.id = 0;
+  session: Session;
+
+  #state: Writable<SessionState>;
+
+  liverUID: Writable<number | undefined>;
+
+  loginData: Writable<LoginData | undefined>;
+
+  token: Writable<TokenInfo | undefined>;
+
+  #userInfoMap: Writable<Map<number, UserInfo>>;
+
+  #streamInfoMap: Writable<Map<number, StreamInfo>>;
+
+  #getDanmakuCycleSet: Writable<Set<number>>;
+
+  constructor(session: Session, liverUID?: number, loginInfo?: loginRequest) {
+    this.#id = 0;
     this.session = session;
-    this.state = writable(new SessionState());
-    this.loginInfo = writable(loginInfo);
+    this.#state = writable(new SessionState());
+    this.liverUID = writable(liverUID);
+    this.loginData = writable(loginInfo);
     this.token = writable(undefined);
-    this.userInfoMap = writable(new Map());
+    this.#userInfoMap = writable(new Map());
+    this.#streamInfoMap = writable(new Map());
+    this.#getDanmakuCycleSet = writable(new Set());
+  }
+
+  get state() {
+    return get(this.#state);
+  }
+
+  get stateReadable() {
+    return readonly(this.#state);
+  }
+
+  get userInfoMap() {
+    return get(this.#userInfoMap);
+  }
+
+  get userInfoMapReadable() {
+    return readonly(this.#userInfoMap);
+  }
+
+  get streamInfoMap() {
+    return get(this.#streamInfoMap);
+  }
+
+  get streamInfoMapReadable() {
+    return readonly(this.#streamInfoMap);
+  }
+
+  get getDanmakuCycleSet() {
+    return get(this.#getDanmakuCycleSet);
+  }
+
+  get getDanmakuCycleSetReadable() {
+    return readonly(this.#getDanmakuCycleSet);
+  }
+
+  userInfo(liverUID: number): UserInfo | undefined {
+    return this.userInfoMap.get(liverUID);
+  }
+
+  streamInfo(liverUID: number): StreamInfo | undefined {
+    return this.streamInfoMap.get(liverUID);
+  }
+
+  isGettingDanmaku(liverUID: number): boolean {
+    return this.streamInfoMap.has(liverUID);
+  }
+
+  isGettingDanmakuCyclically(liverUID: number): boolean {
+    return this.getDanmakuCycleSet.has(liverUID);
   }
 
   connect(): () => void {
     this.session.connect();
     const openUnsubscribe = this.session.on('websocketOpen', () => {
-      this.id += 1;
-      this.state.update((state) => state.connect());
-      this.loginCyclically();
+      this.#id += 1;
+      this.#state.update((state) => state.connect());
+      this.#loginCyclically();
     });
     const closeUnsubscribe = this.session.on('websocketClose', () => {
       // 断开会自动重连
-      this.state.update((state) => state.disconnect());
+      this.#state.update((state) => state.disconnect());
+      this.#streamInfoMap.set(new Map());
+      //this.#getDanmakuCycleSet.set(new Set());
     });
     const errorUnsubscribe = this.session.on('websocketError', () => {
       // 出现错误会断开重连
-      this.state.update((state) => state.disconnect());
+      this.#state.update((state) => state.disconnect());
+      this.#streamInfoMap.set(new Map());
     });
-    const danmakuStopUnsubscribe = this.session.on('danmakuStop', () => {
-      if (this.session.isConnecting() && get(this.state).isGetDanmaku()) {
-        this.state.update((state) => state.cancelGetDanmaku());
+    const loginUnsubscribe = this.session.on('login', () => {
+      for (const liverUID of this.getDanmakuCycleSet) {
+        if (!this.isGettingDanmaku(liverUID)) {
+          this.#getDanmakuCyclically(liverUID);
+        }
       }
     });
-    const danmakuStopErrorUnsubscribe = this.session.on('danmakuStopError', () => {
-      if (this.session.isConnecting() && get(this.state).isGetDanmaku()) {
-        this.state.update((state) => state.cancelGetDanmaku());
+    const setTokenUnsubscribe = this.session.on('setToken', () => {
+      for (const liverUID of this.getDanmakuCycleSet) {
+        if (!this.isGettingDanmaku(liverUID)) {
+          this.#getDanmakuCyclically(liverUID);
+        }
+      }
+    });
+    const danmakuStopUnsubscribe = this.session.on('danmakuStop', (danmaku) => {
+      if (this.session.isConnecting()) {
+        this.#streamInfoMap.update((map) => {
+          map.delete(danmaku.liverUID);
+
+          return map;
+        });
+        if (this.isGettingDanmakuCyclically(danmaku.liverUID)) {
+          this.#getDanmakuCyclically(danmaku.liverUID);
+        }
+      }
+    });
+    const danmakuStopErrorUnsubscribe = this.session.on('danmakuStopError', (danmaku) => {
+      if (this.session.isConnecting()) {
+        this.#streamInfoMap.update((map) => {
+          map.delete(danmaku.liverUID);
+
+          return map;
+        });
+        if (this.isGettingDanmakuCyclically(danmaku.liverUID)) {
+          this.#getDanmakuCyclically(danmaku.liverUID);
+        }
       }
     });
 
     return () => {
-      this.state.update((state) => state.disconnect());
+      this.#state.update((state) => state.disconnect());
       this.token.set(undefined);
+      this.#streamInfoMap.set(new Map());
+      this.#getDanmakuCycleSet.set(new Set());
       openUnsubscribe();
       closeUnsubscribe();
       errorUnsubscribe();
+      loginUnsubscribe();
+      setTokenUnsubscribe();
       danmakuStopUnsubscribe();
       danmakuStopErrorUnsubscribe();
       this.session.disConnect();
     };
   }
 
-  async login(id?: number): Promise<void> {
+  async login(id?: number): Promise<boolean> {
     if (id === undefined) {
-      id = this.id;
+      id = this.#id;
     }
 
     function canContinue(session: SessionData): boolean {
-      return session.session.isConnecting() && session.id === id && get(session.state).isConnect();
+      return session.session.isConnecting() && session.#id === id && session.state.isConnect();
     }
 
     if (canContinue(this)) {
@@ -84,25 +183,31 @@ export class SessionData {
       if (token) {
         await this.session.asyncRequest('setToken', token);
         if (canContinue(this)) {
-          this.state.update((state) => state.login());
+          this.#state.update((state) => state.login());
+
+          return true;
         }
       } else {
         token = (
           await this.session.asyncRequest(
             'login',
-            get(this.loginInfo) || { account: '', password: '' }
+            get(this.loginData) || { account: '', password: '' }
           )
         ).data;
         if (canContinue(this)) {
           this.token.set(token);
-          this.state.update((state) => state.login());
+          this.#state.update((state) => state.login());
+
+          return true;
         }
       }
     }
+
+    return false;
   }
 
-  async loginCyclically(): Promise<void> {
-    const id = this.id;
+  async #loginCyclically(): Promise<void> {
+    const id = this.#id;
 
     for (;;) {
       try {
@@ -115,25 +220,26 @@ export class SessionData {
     }
   }
 
-  async getDanmaku(liverUID: number, isLiver: boolean = false, id?: number): Promise<void> {
+  async getDanmaku(liverUID: number, id?: number): Promise<boolean> {
     if (liverUID <= 0) {
       throw new Error(`liver UID is less than 1: ${liverUID}`);
     }
     if (id === undefined) {
-      id = this.id;
+      id = this.#id;
     }
 
     function canContinue(session: SessionData): boolean {
       return (
         session.session.isConnecting() &&
-        session.id === id &&
+        session.#id === id &&
         get(session.token) !== undefined &&
-        get(session.state).isLogin()
+        session.state.isLogin()
       );
     }
 
-    function updateUserInfo(session: SessionData, liverUID: number, info: getUserInfoResponse) {
-      const user = get(session.userInfoMap).get(liverUID);
+    if (canContinue(this)) {
+      const info = (await this.session.asyncRequest('getUserInfo', { userID: liverUID })).data;
+      const user = this.userInfo(liverUID);
       if (
         !(
           user &&
@@ -142,36 +248,51 @@ export class SessionData {
           user.avatar === info.avatar
         )
       ) {
-        session.userInfoMap.update((map) => map.set(liverUID, info));
+        this.#userInfoMap.update((map) => map.set(liverUID, info));
       }
-    }
 
-    if (canContinue(this)) {
-      const info = (await this.session.asyncRequest('getUserInfo', { userID: liverUID })).data;
-      updateUserInfo(this, liverUID, info);
       if (canContinue(this)) {
-        if (isLiver) {
-          updateUserInfo(this, 0, info);
-        }
-
         if (info.liveID.length > 0) {
-          await this.session.asyncRequest('getDanmaku', { liverUID });
+          const stream = (await this.session.asyncRequest('getDanmaku', { liverUID })).data;
           if (canContinue(this)) {
-            this.state.update((state) => state.getDanmaku());
+            if (stream) {
+              this.#streamInfoMap.update((map) => map.set(liverUID, stream));
+            }
+
+            return true;
           }
         }
       }
     }
+
+    return false;
   }
 
-  async getDanmakuCyclically(liverUID: number, isLiver: boolean = false): Promise<void> {
-    const id = this.id;
+  async #getDanmakuCyclically(liverUID: number): Promise<void> {
+    const id = this.#id;
 
-    for (;;) {
+    while (this.isGettingDanmakuCyclically(liverUID)) {
       try {
-        return await this.getDanmaku(liverUID, isLiver, id);
+        if (await this.getDanmaku(liverUID, id)) {
+          return;
+        }
+
+        await delay(10000);
       } catch {
         await delay(10000);
+      }
+    }
+  }
+
+  async getDanmakuCyclically(liverUID: number): Promise<void> {
+    if (liverUID <= 0) {
+      throw new Error(`liver UID is less than 1: ${liverUID}`);
+    }
+
+    if (!this.isGettingDanmakuCyclically(liverUID)) {
+      this.#getDanmakuCycleSet.update((set) => set.add(liverUID));
+      if (!this.isGettingDanmaku(liverUID)) {
+        await this.#getDanmakuCyclically(liverUID);
       }
     }
   }
@@ -181,29 +302,46 @@ export class SessionData {
       throw new Error(`liver UID is less than 1: ${liverUID}`);
     }
     if (id === undefined) {
-      id = this.id;
+      id = this.#id;
     }
 
     if (
       this.session.isConnecting() &&
-      this.id === id &&
+      this.#id === id &&
       get(this.token) &&
-      get(this.state).isGetDanmaku()
+      this.isGettingDanmaku(liverUID)
     ) {
       await this.session.asyncRequest('stopDanmaku', { liverUID: liverUID });
     }
   }
 
-  async stopDanmakuCyclically(liverUID: number): Promise<void> {
-    const id = this.id;
+  async #stopDanmakuCyclically(liverUID: number): Promise<void> {
+    const id = this.#id;
 
-    for (;;) {
+    while (!this.isGettingDanmakuCyclically(liverUID)) {
       try {
         await this.stopDanmaku(liverUID, id);
 
         return;
       } catch {
         await delay(10000);
+      }
+    }
+  }
+
+  async stopDanmakuCyclically(liverUID: number): Promise<void> {
+    if (liverUID <= 0) {
+      throw new Error(`liver UID is less than 1: ${liverUID}`);
+    }
+
+    if (this.isGettingDanmakuCyclically(liverUID)) {
+      this.#getDanmakuCycleSet.update((set) => {
+        set.delete(liverUID);
+
+        return set;
+      });
+      if (this.isGettingDanmaku(liverUID)) {
+        await this.#stopDanmakuCyclically(liverUID);
       }
     }
   }

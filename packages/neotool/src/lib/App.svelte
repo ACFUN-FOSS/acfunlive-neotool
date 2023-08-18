@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type UserInfo, SessionData } from '@acfunlive-neotool/shared';
+  import { type UserInfo, SessionData, SharedData } from '@acfunlive-neotool/shared';
   import { default as tauriSession } from 'acfunlive-backend-js/tauri.js';
   import { onDestroy } from 'svelte';
   import { writable, get, readonly, type Writable } from 'svelte/store';
@@ -15,64 +15,80 @@
 
   let openUIDDialog = false;
 
+  loadConfig()
+    .then((conf) => {
+      config = conf;
+      conf?.liverUID !== undefined || (openUIDDialog = true);
+    })
+    .catch((e) => console.log(`failed to load config: ${e}`));
+
   $: config && saveConfig(config).catch((e) => console.log(`failed to save config: ${e}`));
 
-  let appsConfigs: AppConfig[] | undefined;
+  type AppData = {
+    config: AppConfig;
+    enable: Writable<boolean>;
+  };
 
-  const enableApps: { [name: string]: Writable<boolean> } = {};
+  let appsConfig: AppData[] | undefined;
 
   let selectedApp = 0;
 
-  $: if (config?.appsDir && !appsConfigs) {
+  $: if (config?.appsDir && !appsConfig) {
     loadApps(config.appsDir)
-      .then((configs) => {
-        appsConfigs = configs;
-        for (const config of configs) {
-          enableApps[config.id] = writable(true);
-        }
-      })
+      .then(
+        (configs) =>
+          (appsConfig = configs.map((config) => {
+            return { config, enable: writable(true) };
+          }))
+      )
       .catch((e) => console.log(`failed to load Apps config: ${e}`));
   }
 
   const session = new SessionData(tauriSession());
 
-  const state = session.state;
+  const state = session.stateReadable;
 
-  const token = session.token;
+  const userInfoMap = session.userInfoMapReadable;
 
-  const userInfoMap = session.userInfoMap;
+  const streamInfoMap = session.streamInfoMapReadable;
 
-  let userInfo: UserInfo | undefined;
-  $: userInfo = $userInfoMap.get(0);
+  const liverUID = session.liverUID;
+  $: $liverUID = config?.liverUID;
 
   const cleanup = session.connect();
 
-  $: if (config?.liverUID && $state.isConnect() && $state.isLogin() && !$state.isGetDanmaku()) {
-    session.getDanmakuCyclically(config.liverUID, true);
+  let userInfo: UserInfo | undefined;
+  $: if (config?.liverUID !== undefined) {
+    userInfo = $userInfoMap.get(config.liverUID);
   }
 
-  loadConfig()
-    .then((conf) => {
-      config = conf;
-      conf?.liverUID || (openUIDDialog = true);
-    })
-    .catch((e) => console.log(`failed to load config: ${e}`));
+  let isGettingDanmaku = false;
+  $: if (config?.liverUID !== undefined) {
+    if ($streamInfoMap.get(config.liverUID)) {
+      isGettingDanmaku = true;
+    } else {
+      isGettingDanmaku = false;
+    }
+  }
+
+  $: if (config?.liverUID !== undefined && $state.isConnect() && $state.isLogin()) {
+    session.getDanmakuCyclically(config?.liverUID);
+  }
 
   onDestroy(cleanup);
 </script>
 
-{#if !config?.liverUID || openUIDDialog}
+{#if config && (config.liverUID === undefined || openUIDDialog)}
   <LiverUIDDialog
     bind:isOpen={openUIDDialog}
     text={config?.liverUID?.toString()}
     on:liverUID={(uid) => {
       if (config) {
         if (config.liverUID) {
-          if (config.liverUID != uid.detail) {
-            const oldLiverUID = config.liverUID;
-            config.liverUID = uid.detail;
+          if (config.liverUID !== uid.detail) {
             // 停止获取弹幕后会重新获取弹幕
-            session.stopDanmakuCyclically(oldLiverUID);
+            session.stopDanmakuCyclically(config.liverUID);
+            config.liverUID = uid.detail;
           }
         } else {
           config.liverUID = uid.detail;
@@ -84,26 +100,31 @@
 
 <div class="flex flex-row justify-between items-center h-16 mx-5">
   <h1>AcFun Neo 直播工具箱</h1>
-  <Avatar state={$state} {userInfo} on:openUIDDialog={() => (openUIDDialog = true)}></Avatar>
+  <Avatar
+    state={$state}
+    {userInfo}
+    {isGettingDanmaku}
+    on:openUIDDialog={() => (openUIDDialog = true)}
+  ></Avatar>
 </div>
 <div class="divider h-0 my-0"></div>
 
-{#if appsConfigs && appsConfigs.length > 0}
+{#if appsConfig && appsConfig.length > 0}
   <div class="drawer drawer-open">
     <input type="checkbox" class="drawer-toggle" />
     <div class="drawer-side">
       <ul class="menu space-y-2">
-        {#each appsConfigs as appConfig, i (appConfig.id)}
+        {#each appsConfig as appConfig, i (appConfig.config.id)}
           <li>
             <div class="flex flex-row" class:active={selectedApp === i}>
               <button class="btn btn-ghost" on:click={() => (selectedApp = i)}
-                >{appConfig.name}</button
+                >{appConfig.config.name}</button
               >
               <input
                 type="checkbox"
                 class="toggle toggle-sm"
-                checked={get(enableApps[appConfig.id])}
-                on:change={(e) => enableApps[appConfig.id].update(() => e.currentTarget.checked)}
+                checked={get(appConfig.enable)}
+                on:change={(e) => appConfig.enable.update(() => e.currentTarget.checked)}
               />
             </div>
           </li>
@@ -111,18 +132,14 @@
       </ul>
     </div>
     <div class="drawer-content">
-      {#each appsConfigs as appConfig, i (appConfig.id)}
+      {#each appsConfig as appConfig, i (appConfig.config.id)}
         <div class:hidden={selectedApp !== i}>
           <SubApp
-            config={appConfig}
+            config={appConfig.config}
             shared={{
               session: session.session,
-              data: {
-                state: readonly(state),
-                token: readonly(token),
-                userInfoMap: readonly(userInfoMap)
-              },
-              enable: readonly(enableApps[appConfig.id])
+              data: new SharedData(session),
+              enable: readonly(appConfig.enable)
             }}
           ></SubApp>
         </div>

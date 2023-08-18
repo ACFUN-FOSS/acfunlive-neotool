@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AppShared, UserInfo } from '@acfunlive-neotool/shared';
+  import type { AppShared } from '@acfunlive-neotool/shared';
   import { onDestroy } from 'svelte';
 
   import { loadConfig, saveConfig, keysToRegex, simulate, type KeyConfig } from './scripts/key';
@@ -12,7 +12,7 @@
 
   const enable = shared.enable;
 
-  const userInfoMap = shared.data.userInfoMap;
+  const liverUID = shared.data.liverUID;
 
   let config: KeyConfig | undefined;
 
@@ -33,9 +33,6 @@
     .then((c) => (config = c))
     .catch((e) => console.log(`failed to load danmaku_keyboard config: ${e}`));
 
-  let userInfo: UserInfo | undefined;
-  $: userInfo = $userInfoMap.get(0);
-
   let unsubscribe: (() => void) | undefined;
 
   $: {
@@ -44,7 +41,7 @@
       unsubscribe = undefined;
     }
 
-    if (userInfo) {
+    if ($liverUID) {
       unsubscribe = shared.session.on(
         'comment',
         (damaku) => {
@@ -65,7 +62,7 @@
             }
           }
         },
-        userInfo.userID
+        $liverUID
       );
     }
   }
@@ -79,7 +76,7 @@
 </script>
 
 <div class="flex flex-col content-between p-5 space-y-5">
-  <div>弹幕前面需要加 @ 符号来触发</div>
+  <div>说明：弹幕前面需要加 @ 符号来触发</div>
   {#if config}
     <table class="table table-zebra">
       <thead>

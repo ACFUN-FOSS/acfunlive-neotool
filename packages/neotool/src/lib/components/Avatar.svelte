@@ -6,6 +6,8 @@
 
   export let userInfo: UserInfo | undefined;
 
+  export let isGettingDanmaku: boolean;
+
   const dispatch = createEventDispatcher<{ openUIDDialog: undefined }>();
 
   let stateClass = '';
@@ -17,7 +19,7 @@
   } else if (!state.isLogin()) {
     stateClass = 'badge-warning';
     stateText = '未登陆';
-  } else if (!state.isGetDanmaku()) {
+  } else if (!isGettingDanmaku) {
     stateClass = userInfo ? 'badge-neutral' : 'badge-warning';
     stateText = userInfo ? '未开播' : '未登陆';
   } else {

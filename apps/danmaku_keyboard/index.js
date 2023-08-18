@@ -1642,13 +1642,13 @@ class Key extends SvelteComponent {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[15] = list[i];
-	child_ctx[16] = list;
-	child_ctx[17] = i;
+	child_ctx[14] = list[i];
+	child_ctx[15] = list;
+	child_ctx[16] = i;
 	return child_ctx;
 }
 
-// (61:2) {#if config}
+// (59:2) {#if config}
 function create_if_block_1(ctx) {
 	let table;
 	let thead;
@@ -1750,24 +1750,24 @@ function create_if_block_1(ctx) {
 	};
 }
 
-// (73:8) {#each config.keys as key, i}
+// (71:8) {#each config.keys as key, i}
 function create_each_block(ctx) {
 	let keydata;
 	let updating_key;
 	let current;
 
 	function keydata_key_binding(value) {
-		/*keydata_key_binding*/ ctx[10](value, /*key*/ ctx[15], /*each_value*/ ctx[16], /*i*/ ctx[17]);
+		/*keydata_key_binding*/ ctx[9](value, /*key*/ ctx[14], /*each_value*/ ctx[15], /*i*/ ctx[16]);
 	}
 
 	function delete_handler() {
-		return /*delete_handler*/ ctx[11](/*i*/ ctx[17]);
+		return /*delete_handler*/ ctx[10](/*i*/ ctx[16]);
 	}
 
 	let keydata_props = {};
 
-	if (/*key*/ ctx[15] !== void 0) {
-		keydata_props.key = /*key*/ ctx[15];
+	if (/*key*/ ctx[14] !== void 0) {
+		keydata_props.key = /*key*/ ctx[14];
 	}
 
 	keydata = new Key({ props: keydata_props });
@@ -1788,7 +1788,7 @@ function create_each_block(ctx) {
 
 			if (!updating_key && dirty & /*config*/ 1) {
 				updating_key = true;
-				keydata_changes.key = /*key*/ ctx[15];
+				keydata_changes.key = /*key*/ ctx[14];
 				add_flush_callback(() => updating_key = false);
 			}
 
@@ -1809,14 +1809,14 @@ function create_each_block(ctx) {
 	};
 }
 
-// (89:0) {#if openInput}
+// (87:0) {#if openInput}
 function create_if_block(ctx) {
 	let input;
 	let updating_isOpen;
 	let current;
 
 	function input_isOpen_binding(value) {
-		/*input_isOpen_binding*/ ctx[13](value);
+		/*input_isOpen_binding*/ ctx[12](value);
 	}
 
 	let input_props = {};
@@ -1827,7 +1827,7 @@ function create_if_block(ctx) {
 
 	input = new Input({ props: input_props });
 	binding_callbacks.push(() => bind(input, 'isOpen', input_isOpen_binding));
-	input.$on("key", /*key_handler*/ ctx[14]);
+	input.$on("key", /*key_handler*/ ctx[13]);
 
 	return {
 		c() {
@@ -1881,7 +1881,7 @@ function create_fragment(ctx) {
 		c() {
 			div1 = element("div");
 			div0 = element("div");
-			div0.textContent = "弹幕前面需要加 @ 符号来触发";
+			div0.textContent = "说明：弹幕前面需要加 @ 符号来触发";
 			t1 = space();
 			if (if_block0) if_block0.c();
 			t2 = space();
@@ -1906,7 +1906,7 @@ function create_fragment(ctx) {
 			current = true;
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*click_handler*/ ctx[12]);
+				dispose = listen(button, "click", /*click_handler*/ ctx[11]);
 				mounted = true;
 			}
 		},
@@ -1984,24 +1984,23 @@ function create_fragment(ctx) {
 }
 
 function instance($$self, $$props, $$invalidate) {
+	let $liverUID;
 	let $enable;
-	let $userInfoMap;
 	let { shared } = $$props;
 	const enable = shared.enable;
 	component_subscribe($$self, enable, value => $$invalidate(8, $enable = value));
-	const userInfoMap = shared.data.userInfoMap;
-	component_subscribe($$self, userInfoMap, value => $$invalidate(9, $userInfoMap = value));
+	const liverUID = shared.data.liverUID;
+	component_subscribe($$self, liverUID, value => $$invalidate(7, $liverUID = value));
 	let config;
 	let regex;
 	let openInput = false;
 	loadConfig().then(c => $$invalidate(0, config = c)).catch(e => console.log(`failed to load danmaku_keyboard config: ${e}`));
-	let userInfo;
 	let unsubscribe;
 
 	onDestroy(() => {
 		if (unsubscribe) {
 			unsubscribe();
-			$$invalidate(7, unsubscribe = undefined);
+			$$invalidate(6, unsubscribe = undefined);
 		}
 	});
 
@@ -2046,19 +2045,15 @@ function instance($$self, $$props, $$invalidate) {
 			}
 		}
 
-		if ($$self.$$.dirty & /*$userInfoMap*/ 512) {
-			$$invalidate(6, userInfo = $userInfoMap.get(0));
-		}
-
-		if ($$self.$$.dirty & /*unsubscribe, userInfo, shared, $enable, regex, config*/ 497) {
+		if ($$self.$$.dirty & /*unsubscribe, $liverUID, shared, $enable, regex, config*/ 497) {
 			{
 				if (unsubscribe) {
 					unsubscribe();
-					$$invalidate(7, unsubscribe = undefined);
+					$$invalidate(6, unsubscribe = undefined);
 				}
 
-				if (userInfo) {
-					$$invalidate(7, unsubscribe = shared.session.on(
+				if ($liverUID) {
+					$$invalidate(6, unsubscribe = shared.session.on(
 						'comment',
 						damaku => {
 							if ($enable && regex) {
@@ -2080,7 +2075,7 @@ function instance($$self, $$props, $$invalidate) {
 								}
 							}
 						},
-						userInfo.userID
+						$liverUID
 					));
 				}
 			}
@@ -2091,13 +2086,12 @@ function instance($$self, $$props, $$invalidate) {
 		config,
 		openInput,
 		enable,
-		userInfoMap,
+		liverUID,
 		shared,
 		regex,
-		userInfo,
 		unsubscribe,
+		$liverUID,
 		$enable,
-		$userInfoMap,
 		keydata_key_binding,
 		delete_handler,
 		click_handler,
