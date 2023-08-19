@@ -1,7 +1,7 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import svelte from 'rollup-plugin-svelte';
-import typescript from '@rollup/plugin-typescript';
+import typescript from 'rollup-plugin-typescript2';
 import scss from 'rollup-plugin-scss';
 import resolve from '@rollup/plugin-node-resolve';
 import sveltePreprocess from 'svelte-preprocess';
@@ -23,6 +23,7 @@ export default {
         }
       })
     }),
+    resolve(),
     typescript(),
     scss({
       name: 'index.css',
@@ -38,7 +39,6 @@ export default {
           map: map
         };
       }
-    }),
-    resolve()
+    })
   ]
 };

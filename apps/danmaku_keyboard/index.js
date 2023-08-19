@@ -770,14 +770,29 @@ function __awaiter(thisArg, _arguments, P, generator) {
     });
 }
 
+function __classPrivateFieldGet(receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+}
+
+function __classPrivateFieldSet(receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+}
+
 typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
     var e = new Error(message);
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
+var _KeyboardListener_id;
 class KeyboardListener {
     constructor(id) {
-        this.id = id;
+        _KeyboardListener_id.set(this, void 0);
+        __classPrivateFieldSet(this, _KeyboardListener_id, id, "f");
     }
     static start_listen(keyDown, keyUp) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -790,10 +805,11 @@ class KeyboardListener {
     }
     stop_listen() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield d$2('plugin:acfunlive-neotool-keyboard|stop_listen', { id: this.id });
+            yield d$2('plugin:acfunlive-neotool-keyboard|stop_listen', { id: __classPrivateFieldGet(this, _KeyboardListener_id, "f") });
         });
     }
 }
+_KeyboardListener_id = new WeakMap();
 function simulate_input(input) {
     return __awaiter(this, void 0, void 0, function* () {
         yield d$2('plugin:acfunlive-neotool-keyboard|simulate_input', { input });
@@ -1986,10 +2002,10 @@ function create_fragment(ctx) {
 function instance($$self, $$props, $$invalidate) {
 	let $liverUID;
 	let $enable;
-	let { shared } = $$props;
-	const enable = shared.enable;
+	let { data } = $$props;
+	const enable = data.enable;
 	component_subscribe($$self, enable, value => $$invalidate(8, $enable = value));
-	const liverUID = shared.data.liverUID;
+	const liverUID = data.data.liverUID;
 	component_subscribe($$self, liverUID, value => $$invalidate(7, $liverUID = value));
 	let config;
 	let regex;
@@ -2029,7 +2045,7 @@ function instance($$self, $$props, $$invalidate) {
 	};
 
 	$$self.$$set = $$props => {
-		if ('shared' in $$props) $$invalidate(4, shared = $$props.shared);
+		if ('data' in $$props) $$invalidate(4, data = $$props.data);
 	};
 
 	$$self.$$.update = () => {
@@ -2045,7 +2061,7 @@ function instance($$self, $$props, $$invalidate) {
 			}
 		}
 
-		if ($$self.$$.dirty & /*unsubscribe, $liverUID, shared, $enable, regex, config*/ 497) {
+		if ($$self.$$.dirty & /*unsubscribe, $liverUID, data, $enable, regex, config*/ 497) {
 			{
 				if (unsubscribe) {
 					unsubscribe();
@@ -2053,7 +2069,7 @@ function instance($$self, $$props, $$invalidate) {
 				}
 
 				if ($liverUID) {
-					$$invalidate(6, unsubscribe = shared.session.on(
+					$$invalidate(6, unsubscribe = data.session.on(
 						'comment',
 						damaku => {
 							if ($enable && regex) {
@@ -2087,7 +2103,7 @@ function instance($$self, $$props, $$invalidate) {
 		openInput,
 		enable,
 		liverUID,
-		shared,
+		data,
 		regex,
 		unsubscribe,
 		$liverUID,
@@ -2103,7 +2119,7 @@ function instance($$self, $$props, $$invalidate) {
 class App extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance, create_fragment, safe_not_equal, { shared: 4 });
+		init(this, options, instance, create_fragment, safe_not_equal, { data: 4 });
 	}
 }
 

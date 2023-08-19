@@ -3,10 +3,12 @@ import type {
   loginRequest,
   tokenInfo,
   getUserInfoResponse,
-  streamInfo
+  streamInfo,
+  unsubscribe
 } from 'acfunlive-backend-js/tauri.js';
 import { writable, get, readonly, type Writable } from 'svelte/store';
 
+import type { MessageType, Message } from './message.js';
 import { SessionState } from './state.js';
 
 export type LoginData = loginRequest;
@@ -24,6 +26,8 @@ export class SessionData {
 
   #state: Writable<SessionState>;
 
+  #clientID: string;
+
   liverUID: Writable<number | undefined>;
 
   loginData: Writable<LoginData | undefined>;
@@ -36,10 +40,11 @@ export class SessionData {
 
   #getDanmakuCycleSet: Writable<Set<number>>;
 
-  constructor(session: Session, liverUID?: number, loginInfo?: loginRequest) {
+  constructor(session: Session, clientID: string, loginInfo?: loginRequest, liverUID?: number) {
     this.#id = 0;
     this.session = session;
     this.#state = writable(new SessionState());
+    this.#clientID = clientID;
     this.liverUID = writable(liverUID);
     this.loginData = writable(loginInfo);
     this.token = writable(undefined);
@@ -54,6 +59,10 @@ export class SessionData {
 
   get stateReadable() {
     return readonly(this.#state);
+  }
+
+  get clientID() {
+    return this.#clientID;
   }
 
   get userInfoMap() {
@@ -101,6 +110,7 @@ export class SessionData {
     const openUnsubscribe = this.session.on('websocketOpen', () => {
       this.#id += 1;
       this.#state.update((state) => state.connect());
+      this.#setClientIDCyclically();
       this.#loginCyclically();
     });
     const closeUnsubscribe = this.session.on('websocketClose', () => {
@@ -167,6 +177,41 @@ export class SessionData {
       danmakuStopErrorUnsubscribe();
       this.session.disConnect();
     };
+  }
+
+  async setClientID(clientID: string, id?: number): Promise<boolean> {
+    if (id === undefined) {
+      id = this.#id;
+    }
+
+    function canContinue(session: SessionData): boolean {
+      return session.session.isConnecting() && session.#id === id && session.state.isConnect();
+    }
+
+    if (canContinue(this)) {
+      await this.session.asyncRequest('setClientID', { clientID });
+      if (canContinue(this)) {
+        this.#clientID = clientID;
+
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  async #setClientIDCyclically(): Promise<void> {
+    const id = this.#id;
+
+    for (;;) {
+      try {
+        await this.setClientID(this.#clientID, id);
+
+        return;
+      } catch {
+        await delay(10000);
+      }
+    }
   }
 
   async login(id?: number): Promise<boolean> {
@@ -345,6 +390,73 @@ export class SessionData {
       }
     }
   }
+
+  async sendMessage<M extends MessageType>(
+    clientID: string,
+    message: Message<M>,
+    id?: number
+  ): Promise<boolean> {
+    if (id === undefined) {
+      id = this.#id;
+    }
+
+    function canContinue(session: SessionData): boolean {
+      return session.session.isConnecting() && session.#id === id && session.state.isConnect();
+    }
+
+    if (canContinue(this)) {
+      await this.session.asyncRequest('requestForward', {
+        clientID,
+        message: JSON.stringify(message)
+      });
+      if (canContinue(this)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  async sendMessageCyclically<M extends MessageType>(
+    clientID: string,
+    message: Message<M>
+  ): Promise<void> {
+    const id = this.#id;
+
+    for (;;) {
+      try {
+        await this.sendMessage(clientID, message, id);
+
+        return;
+      } catch {
+        await delay(10000);
+      }
+    }
+  }
+
+  onReceiveMessage<M extends MessageType>(
+    target: keyof M,
+    callback: (message: Message<M>) => void
+  ): unsubscribe {
+    return onReceiveMessage(this.session, target, callback);
+  }
+}
+
+export function onReceiveMessage<M extends MessageType>(
+  session: Session,
+  target: keyof M,
+  callback: (message: Message<M>) => void
+): unsubscribe {
+  return session.on('receiveForward', (m) => {
+    const message: Message<M> = JSON.parse(m.data.message);
+    try {
+      if (message.target === target) {
+        callback(message);
+      }
+    } catch (e) {
+      console.log(`receive forwarding message error: ${e}`);
+    }
+  });
 }
 
 function delay(ms: number): Promise<void> {

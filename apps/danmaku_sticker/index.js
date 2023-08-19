@@ -112,6 +112,25 @@ function set_current_component(component) {
 	current_component = component;
 }
 
+function get_current_component() {
+	if (!current_component) throw new Error('Function called outside component initialization');
+	return current_component;
+}
+
+/**
+ * Schedules a callback to run immediately before the component is unmounted.
+ *
+ * Out of `onMount`, `beforeUpdate`, `afterUpdate` and `onDestroy`, this is the
+ * only one that runs inside a server-side component.
+ *
+ * https://svelte.dev/docs/svelte#ondestroy
+ * @param {() => any} fn
+ * @returns {void}
+ */
+function onDestroy(fn) {
+	get_current_component().$$.on_destroy.push(fn);
+}
+
 const dirty_components = [];
 const binding_callbacks = [];
 
@@ -468,6 +487,144 @@ if (typeof window !== 'undefined')
 	// @ts-ignore
 	(window.__svelte || (window.__svelte = { v: new Set() })).v.add(PUBLIC_VERSION);
 
+const hostname = 'localhost';
+const port = 25360;
+
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise, SuppressedError, Symbol */
+
+
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
+
+var StateFlag;
+(function (StateFlag) {
+    StateFlag[StateFlag["Disconnect"] = 0] = "Disconnect";
+    StateFlag[StateFlag["Connect"] = 1] = "Connect";
+    StateFlag[StateFlag["Login"] = 2] = "Login";
+})(StateFlag || (StateFlag = {}));
+
+function onReceiveMessage(session, target, callback) {
+    return session.on('receiveForward', (m) => {
+        const message = JSON.parse(m.data.message);
+        try {
+            if (message.target === target) {
+                callback(message);
+            }
+        }
+        catch (e) {
+            console.log(`receive forwarding message error: ${e}`);
+        }
+    });
+}
+
+function n$1(){return navigator.appVersion.includes("Win")}
+
+var d$3=Object.defineProperty;var e=(c,a)=>{for(var b in a)d$3(c,b,{get:a[b],enumerable:!0});};
+
+var w$1={};e(w$1,{convertFileSrc:()=>u$2,invoke:()=>d$2,transformCallback:()=>s$1});function l$2(){return window.crypto.getRandomValues(new Uint32Array(1))[0]}function s$1(r,n=!1){let e=l$2(),t=`_${e}`;return Object.defineProperty(window,t,{value:o=>(n&&Reflect.deleteProperty(window,t),r?.(o)),writable:!1,configurable:!0}),e}async function d$2(r,n={}){return new Promise((e,t)=>{let o=s$1(i=>{e(i),Reflect.deleteProperty(window,`_${a}`);},!0),a=s$1(i=>{t(i),Reflect.deleteProperty(window,`_${o}`);},!0);window.__TAURI_IPC__({cmd:r,callback:o,error:a,...n});})}function u$2(r,n="asset"){let e=encodeURIComponent(r);return navigator.userAgent.includes("Windows")?`https://${n}.localhost/${e}`:`${n}://localhost/${e}`}
+
+async function a$1(i){return d$2("tauri",i)}
+
+var x$1={};e(x$1,{BaseDirectory:()=>F$1,Dir:()=>F$1,copyFile:()=>c$1,createDir:()=>d$1,exists:()=>v$1,readBinaryFile:()=>a,readDir:()=>m$1,readTextFile:()=>l$1,removeDir:()=>g$1,removeFile:()=>O,renameFile:()=>_$1,writeBinaryFile:()=>f$1,writeFile:()=>u$1,writeTextFile:()=>u$1});var F$1=(n=>(n[n.Audio=1]="Audio",n[n.Cache=2]="Cache",n[n.Config=3]="Config",n[n.Data=4]="Data",n[n.LocalData=5]="LocalData",n[n.Desktop=6]="Desktop",n[n.Document=7]="Document",n[n.Download=8]="Download",n[n.Executable=9]="Executable",n[n.Font=10]="Font",n[n.Home=11]="Home",n[n.Picture=12]="Picture",n[n.Public=13]="Public",n[n.Runtime=14]="Runtime",n[n.Template=15]="Template",n[n.Video=16]="Video",n[n.Resource=17]="Resource",n[n.App=18]="App",n[n.Log=19]="Log",n[n.Temp=20]="Temp",n[n.AppConfig=21]="AppConfig",n[n.AppData=22]="AppData",n[n.AppLocalData=23]="AppLocalData",n[n.AppCache=24]="AppCache",n[n.AppLog=25]="AppLog",n))(F$1||{});async function l$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"readTextFile",path:i,options:t}})}async function a(i,t={}){let s=await a$1({__tauriModule:"Fs",message:{cmd:"readFile",path:i,options:t}});return Uint8Array.from(s)}async function u$1(i,t,s){typeof s=="object"&&Object.freeze(s),typeof i=="object"&&Object.freeze(i);let e={path:"",contents:""},r=s;return typeof i=="string"?e.path=i:(e.path=i.path,e.contents=i.contents),typeof t=="string"?e.contents=t??"":r=t,a$1({__tauriModule:"Fs",message:{cmd:"writeFile",path:e.path,contents:Array.from(new TextEncoder().encode(e.contents)),options:r}})}async function f$1(i,t,s){typeof s=="object"&&Object.freeze(s),typeof i=="object"&&Object.freeze(i);let e={path:"",contents:[]},r=s;return typeof i=="string"?e.path=i:(e.path=i.path,e.contents=i.contents),t&&"dir"in t?r=t:typeof i=="string"&&(e.contents=t??[]),a$1({__tauriModule:"Fs",message:{cmd:"writeFile",path:e.path,contents:Array.from(e.contents instanceof ArrayBuffer?new Uint8Array(e.contents):e.contents),options:r}})}async function m$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"readDir",path:i,options:t}})}async function d$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"createDir",path:i,options:t}})}async function g$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"removeDir",path:i,options:t}})}async function c$1(i,t,s={}){return a$1({__tauriModule:"Fs",message:{cmd:"copyFile",source:i,destination:t,options:s}})}async function O(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"removeFile",path:i,options:t}})}async function _$1(i,t,s={}){return a$1({__tauriModule:"Fs",message:{cmd:"renameFile",oldPath:i,newPath:t,options:s}})}async function v$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"exists",path:i,options:t}})}
+
+var q={};e(q,{BaseDirectory:()=>F$1,appCacheDir:()=>g,appConfigDir:()=>s,appDataDir:()=>c,appDir:()=>u,appLocalDataDir:()=>m,appLogDir:()=>n,audioDir:()=>d,basename:()=>V,cacheDir:()=>P,configDir:()=>h,dataDir:()=>l,delimiter:()=>z,desktopDir:()=>_,dirname:()=>F,documentDir:()=>p,downloadDir:()=>y,executableDir:()=>f,extname:()=>H,fontDir:()=>D,homeDir:()=>M,isAbsolute:()=>W,join:()=>E,localDataDir:()=>v,logDir:()=>w,normalize:()=>B,pictureDir:()=>b,publicDir:()=>A,resolve:()=>T,resolveResource:()=>x,resourceDir:()=>C,runtimeDir:()=>L,sep:()=>j,templateDir:()=>R,videoDir:()=>k});async function u(){return s()}async function s(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:21}})}async function c(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:22}})}async function m(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:23}})}async function g(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:24}})}async function d(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:1}})}async function P(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:2}})}async function h(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:3}})}async function l(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:4}})}async function _(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:6}})}async function p(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:7}})}async function y(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:8}})}async function f(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:9}})}async function D(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:10}})}async function M(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:11}})}async function v(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:5}})}async function b(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:12}})}async function A(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:13}})}async function C(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:17}})}async function x(t){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:t,directory:17}})}async function L(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:14}})}async function R(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:15}})}async function k(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:16}})}async function w(){return n()}async function n(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:25}})}var j=n$1()?"\\":"/",z=n$1()?";":":";async function T(...t){return a$1({__tauriModule:"Path",message:{cmd:"resolve",paths:t}})}async function B(t){return a$1({__tauriModule:"Path",message:{cmd:"normalize",path:t}})}async function E(...t){return a$1({__tauriModule:"Path",message:{cmd:"join",paths:t}})}async function F(t){return a$1({__tauriModule:"Path",message:{cmd:"dirname",path:t}})}async function H(t){return a$1({__tauriModule:"Path",message:{cmd:"extname",path:t}})}async function V(t,a){return a$1({__tauriModule:"Path",message:{cmd:"basename",path:t,ext:a}})}async function W(t){return a$1({__tauriModule:"Path",message:{cmd:"isAbsolute",path:t}})}
+
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise, SuppressedError, Symbol */
+
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+function __classPrivateFieldGet(receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+}
+
+function __classPrivateFieldSet(receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+}
+
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
+
+var _Server_id;
+function checkPort(port) {
+    if (port < 1024 || port > 65535) {
+        throw new Error(`the port number is out of range: ${port}`);
+    }
+}
+class Server {
+    constructor(id) {
+        _Server_id.set(this, void 0);
+        __classPrivateFieldSet(this, _Server_id, id, "f");
+    }
+    static startServe(dir, hostname, port) {
+        return __awaiter(this, void 0, void 0, function* () {
+            checkPort(port);
+            const id = yield d$2('plugin:acfunlive-neotool-serve-files|start_serve', {
+                dir,
+                hostname,
+                port
+            });
+            return new Server(id);
+        });
+    }
+    stopServe() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield d$2('plugin:acfunlive-neotool-serve-files|stop_serve', { id: __classPrivateFieldGet(this, _Server_id, "f") });
+        });
+    }
+    isServing() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield d$2('plugin:acfunlive-neotool-serve-files|is_serving', { id: __classPrivateFieldGet(this, _Server_id, "f") });
+        });
+    }
+}
+_Server_id = new WeakMap();
+
 /* src/App.svelte generated by Svelte v4.2.0 */
 
 function create_fragment(ctx) {
@@ -493,10 +650,34 @@ function create_fragment(ctx) {
 	};
 }
 
+function instance($$self, $$props, $$invalidate) {
+	let { data } = $$props;
+	let server;
+	E(data.config.path, 'web').then(path => Server.startServe(path, hostname, port).then(s => server = s).catch(e => console.log(`failed to start the server: ${e}`)));
+
+	const receiveUnsubscribe = onReceiveMessage(data.session, 'danmakuSticker', message => {
+		console.log('receive: ', message);
+	});
+
+	onDestroy(() => {
+		server === null || server === void 0
+		? void 0
+		: server.stopServe();
+
+		receiveUnsubscribe();
+	});
+
+	$$self.$$set = $$props => {
+		if ('data' in $$props) $$invalidate(0, data = $$props.data);
+	};
+
+	return [data];
+}
+
 class App extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, null, create_fragment, safe_not_equal, {});
+		init(this, options, instance, create_fragment, safe_not_equal, { data: 0 });
 	}
 }
 

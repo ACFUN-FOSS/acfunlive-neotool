@@ -87,10 +87,10 @@ export type Key =
   | '/';
 
 export class KeyboardListener {
-  id: number;
+  #id: number;
 
-  constructor(id: number) {
-    this.id = id;
+  private constructor(id: number) {
+    this.#id = id;
   }
 
   static async start_listen(
@@ -106,7 +106,7 @@ export class KeyboardListener {
   }
 
   async stop_listen(): Promise<void> {
-    await invoke('plugin:acfunlive-neotool-keyboard|stop_listen', { id: this.id });
+    await invoke('plugin:acfunlive-neotool-keyboard|stop_listen', { id: this.#id });
   }
 }
 

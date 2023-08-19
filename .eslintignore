@@ -22,6 +22,6 @@ yarn.lock
 # apps
 /apps/*/index.js
 /apps/*/index.css
+/apps/*/web
 
 /packages/neotool/build
-/packages/neotool/package

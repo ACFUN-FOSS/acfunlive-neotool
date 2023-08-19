@@ -1,5 +1,5 @@
 {
-  "name": "tauri-plugin-acfunlive-neotool-serve-file-api",
+  "name": "tauri-plugin-acfunlive-neotool-serve-files-api",
   "version": "0.1.0",
   "description": "acfunlive-neotool tauri plugin for serving html files API",
   "keywords": [
@@ -29,7 +29,7 @@
     "@rollup/plugin-node-resolve": "^15.2.0",
     "@rollup/plugin-typescript": "^11.1.2",
     "rollup": "^3.28.0",
-    "tslib": "^2.6.1",
+    "tslib": "^2.6.2",
     "typescript": "^5.1.6"
   }
 }

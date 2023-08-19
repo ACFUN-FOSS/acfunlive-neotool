@@ -19,6 +19,7 @@ enum Error {
 }
 
 impl Serialize for Error {
+    #[inline]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -67,6 +68,7 @@ async fn load_apps_config(apps_dir: String) -> Result<Vec<AppConfig>> {
 }
 
 #[command]
+#[inline]
 async fn canonicalize(path: String) -> Result<String> {
     Ok(dunce::simplified(&tokio::fs::canonicalize(path).await?)
         .to_string_lossy()
@@ -74,6 +76,7 @@ async fn canonicalize(path: String) -> Result<String> {
 }
 
 /// Initializes the plugin.
+#[inline]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("acfunlive-neotool-base")
         .invoke_handler(tauri::generate_handler![load_apps_config, canonicalize])

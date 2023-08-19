@@ -51,12 +51,9 @@ importers:
       '@rollup/plugin-node-resolve':
         specifier: ^15.2.0
         version: 15.2.0(rollup@3.28.0)
-      '@rollup/plugin-typescript':
-        specifier: ^11.1.2
-        version: 11.1.2(rollup@3.28.0)(tslib@2.6.1)(typescript@5.1.6)
       '@types/node':
-        specifier: ^20.5.0
-        version: 20.5.0
+        specifier: ^20.5.1
+        version: 20.5.1
       autoprefixer:
         specifier: ^10.4.15
         version: 10.4.15(postcss@8.4.28)
@@ -75,24 +72,30 @@ importers:
       rollup-plugin-svelte:
         specifier: ^7.1.6
         version: 7.1.6(rollup@3.28.0)(svelte@4.2.0)
+      rollup-plugin-typescript2:
+        specifier: ^0.35.0
+        version: 0.35.0(rollup@3.28.0)(typescript@5.1.6)
       sass:
-        specifier: ^1.65.1
-        version: 1.65.1
+        specifier: ^1.66.0
+        version: 1.66.0
       svelte-preprocess:
         specifier: ^5.0.4
-        version: 5.0.4(postcss@8.4.28)(sass@1.65.1)(svelte@4.2.0)(typescript@5.1.6)
+        version: 5.0.4(postcss@8.4.28)(sass@1.66.0)(svelte@4.2.0)(typescript@5.1.6)
       tailwindcss:
         specifier: ^3.3.3
         version: 3.3.3
       tslib:
-        specifier: ^2.6.1
-        version: 2.6.1
+        specifier: ^2.6.2
+        version: 2.6.2
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
 
   apps/danmaku_sticker:
     dependencies:
+      '@acfunlive-neotool/danmaku-sticker-shared':
+        specifier: link:packages/shared
+        version: link:packages/shared
       '@acfunlive-neotool/shared':
         specifier: link:../../packages/shared
         version: link:../../packages/shared
@@ -102,16 +105,16 @@ importers:
       svelte:
         specifier: ^4.2.0
         version: 4.2.0
+      tauri-plugin-acfunlive-neotool-serve-files-api:
+        specifier: link:../../plugins/serve_files
+        version: link:../../plugins/serve_files
     devDependencies:
       '@rollup/plugin-node-resolve':
         specifier: ^15.2.0
         version: 15.2.0(rollup@3.28.0)
-      '@rollup/plugin-typescript':
-        specifier: ^11.1.2
-        version: 11.1.2(rollup@3.28.0)(tslib@2.6.1)(typescript@5.1.6)
       '@types/node':
-        specifier: ^20.5.0
-        version: 20.5.0
+        specifier: ^20.5.1
+        version: 20.5.1
       autoprefixer:
         specifier: ^10.4.15
         version: 10.4.15(postcss@8.4.28)
@@ -130,21 +133,68 @@ importers:
       rollup-plugin-svelte:
         specifier: ^7.1.6
         version: 7.1.6(rollup@3.28.0)(svelte@4.2.0)
+      rollup-plugin-typescript2:
+        specifier: ^0.35.0
+        version: 0.35.0(rollup@3.28.0)(typescript@5.1.6)
       sass:
-        specifier: ^1.65.1
-        version: 1.65.1
+        specifier: ^1.66.0
+        version: 1.66.0
       svelte-preprocess:
         specifier: ^5.0.4
-        version: 5.0.4(postcss@8.4.28)(sass@1.65.1)(svelte@4.2.0)(typescript@5.1.6)
+        version: 5.0.4(postcss@8.4.28)(sass@1.66.0)(svelte@4.2.0)(typescript@5.1.6)
       tailwindcss:
         specifier: ^3.3.3
         version: 3.3.3
       tslib:
-        specifier: ^2.6.1
-        version: 2.6.1
+        specifier: ^2.6.2
+        version: 2.6.2
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
+
+  apps/danmaku_sticker/packages/shared:
+    dependencies:
+      '@acfunlive-neotool/shared':
+        specifier: link:../../../../packages/shared
+        version: link:../../../../packages/shared
+    devDependencies:
+      tslib:
+        specifier: ^2.6.2
+        version: 2.6.2
+      typescript:
+        specifier: ^5.1.6
+        version: 5.1.6
+
+  apps/danmaku_sticker/packages/web:
+    dependencies:
+      '@acfunlive-neotool/danmaku-sticker-shared':
+        specifier: link:../shared
+        version: link:../shared
+      acfunlive-backend-js:
+        specifier: github:ACFUN-FOSS/acfunlive-backend-js
+        version: github.com/ACFUN-FOSS/acfunlive-backend-js/7b8c79f0ac7c70519be011c9a62fb94dc9d9dc48(rescript@11.0.0-rc.1)(tauri-plugin-websocket-api@0.0.0)
+      svelte:
+        specifier: ^4.2.0
+        version: 4.2.0
+    devDependencies:
+      '@sveltejs/adapter-static':
+        specifier: ^2.0.3
+        version: 2.0.3(@sveltejs/kit@1.22.6)
+      '@sveltejs/kit':
+        specifier: ^1.22.6
+        version: 1.22.6(svelte@4.2.0)(vite@4.4.9)
+      svelte-check:
+        specifier: ^3.5.0
+        version: 3.5.0(postcss-load-config@4.0.1)(postcss@8.4.28)(svelte@4.2.0)
+      tslib:
+        specifier: ^2.6.2
+        version: 2.6.2
+      typescript:
+        specifier: ^5.1.6
+        version: 5.1.6
+      vite:
+        specifier: ^4.4.9
+        version: 4.4.9
 
   packages/neotool:
     dependencies:
@@ -198,8 +248,8 @@ importers:
         specifier: ^3.3.3
         version: 3.3.3
       tslib:
-        specifier: ^2.6.1
-        version: 2.6.1
+        specifier: ^2.6.2
+        version: 2.6.2
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
@@ -217,8 +267,8 @@ importers:
         version: 4.2.0
     devDependencies:
       tslib:
-        specifier: ^2.6.1
-        version: 2.6.1
+        specifier: ^2.6.2
+        version: 2.6.2
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
@@ -234,13 +284,13 @@ importers:
         version: 15.2.0(rollup@3.28.0)
       '@rollup/plugin-typescript':
         specifier: ^11.1.2
-        version: 11.1.2(rollup@3.28.0)(tslib@2.6.1)(typescript@5.1.6)
+        version: 11.1.2(rollup@3.28.0)(tslib@2.6.2)(typescript@5.1.6)
       rollup:
         specifier: ^3.28.0
         version: 3.28.0
       tslib:
-        specifier: ^2.6.1
-        version: 2.6.1
+        specifier: ^2.6.2
+        version: 2.6.2
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
@@ -256,18 +306,18 @@ importers:
         version: 15.2.0(rollup@3.28.0)
       '@rollup/plugin-typescript':
         specifier: ^11.1.2
-        version: 11.1.2(rollup@3.28.0)(tslib@2.6.1)(typescript@5.1.6)
+        version: 11.1.2(rollup@3.28.0)(tslib@2.6.2)(typescript@5.1.6)
       rollup:
         specifier: ^3.28.0
         version: 3.28.0
       tslib:
-        specifier: ^2.6.1
-        version: 2.6.1
+        specifier: ^2.6.2
+        version: 2.6.2
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
 
-  plugins/serve_file:
+  plugins/serve_files:
     dependencies:
       '@tauri-apps/api':
         specifier: ^1.4.0
@@ -278,13 +328,13 @@ importers:
         version: 15.2.0(rollup@3.28.0)
       '@rollup/plugin-typescript':
         specifier: ^11.1.2
-        version: 11.1.2(rollup@3.28.0)(tslib@2.6.1)(typescript@5.1.6)
+        version: 11.1.2(rollup@3.28.0)(tslib@2.6.2)(typescript@5.1.6)
       rollup:
         specifier: ^3.28.0
         version: 3.28.0
       tslib:
-        specifier: ^2.6.1
-        version: 2.6.1
+        specifier: ^2.6.2
+        version: 2.6.2
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
@@ -639,7 +689,7 @@ packages:
       rollup: 3.28.0
     dev: true
 
-  /@rollup/plugin-typescript@11.1.2(rollup@3.28.0)(tslib@2.6.1)(typescript@5.1.6):
+  /@rollup/plugin-typescript@11.1.2(rollup@3.28.0)(tslib@2.6.2)(typescript@5.1.6):
     resolution: {integrity: sha512-0ghSOCMcA7fl1JM+0gYRf+Q/HWyg+zg7/gDSc+fRLmlJWcW5K1I+CLRzaRhXf4Y3DRyPnnDo4M2ktw+a6JcDEg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -655,7 +705,7 @@ packages:
       '@rollup/pluginutils': 5.0.3(rollup@3.28.0)
       resolve: 1.22.4
       rollup: 3.28.0
-      tslib: 2.6.1
+      tslib: 2.6.2
       typescript: 5.1.6
     dev: true
 
@@ -876,8 +926,8 @@ packages:
     resolution: {integrity: sha512-Hr5Jfhc9eYOQNPYO5WLDq/n4jqijdHNlDXjuAQkkt+mWdQR+XJToOHrsD4cPaMXpn6KO7y2+wM8AZEs8VpBLVA==}
     dev: true
 
-  /@types/node@20.5.0:
-    resolution: {integrity: sha512-Mgq7eCtoTjT89FqNoTzzXg2XvCi5VMhRV6+I2aYanc6kQCBImeNaAYRs/DyoVqk1YEUJK5gN9VO7HRIdz4Wo3Q==}
+  /@types/node@20.5.1:
+    resolution: {integrity: sha512-4tT2UrL5LBqDwoed9wZ6N3umC4Yhz3W3FloMmiiG4JwmUJWpie0c7lcnUNd4gtMKuDEO4wRVS8B6Xa0uMRsMKg==}
     dev: true
 
   /@types/pug@2.0.6:
@@ -1137,7 +1187,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001521
-      electron-to-chromium: 1.4.494
+      electron-to-chromium: 1.4.496
       node-releases: 2.0.13
       update-browserslist-db: 1.0.11(browserslist@4.21.10)
     dev: true
@@ -1222,6 +1272,10 @@ packages:
   /commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
     engines: {node: '>= 6'}
+    dev: true
+
+  /commondir@1.0.1:
+    resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
     dev: true
 
   /concat-map@0.0.1:
@@ -1331,8 +1385,8 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /electron-to-chromium@1.4.494:
-    resolution: {integrity: sha512-KF7wtsFFDu4ws1ZsSOt4pdmO1yWVNWCFtijVYZPUeW4SV7/hy/AESjLn/+qIWgq7mHscNOKAwN5AIM1+YAy+Ww==}
+  /electron-to-chromium@1.4.496:
+    resolution: {integrity: sha512-qeXC3Zbykq44RCrBa4kr8v/dWzYJA8rAwpyh9Qd+NKWoJfjG5vvJqy9XOJ9H4P/lqulZBCgUWAYi+FeK5AuJ8g==}
     dev: true
 
   /es6-promise@3.3.1:
@@ -1572,6 +1626,23 @@ packages:
       to-regex-range: 5.0.1
     dev: true
 
+  /find-cache-dir@3.3.2:
+    resolution: {integrity: sha512-wXZV5emFEjrridIgED11OoUKLxiYjAcqot/NJdAkOhlJ+vGzwhOAfcG5OX1jP+S0PcjEn8bdMJv+g2jwQ3Onig==}
+    engines: {node: '>=8'}
+    dependencies:
+      commondir: 1.0.1
+      make-dir: 3.1.0
+      pkg-dir: 4.2.0
+    dev: true
+
+  /find-up@4.1.0:
+    resolution: {integrity: sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw==}
+    engines: {node: '>=8'}
+    dependencies:
+      locate-path: 5.0.0
+      path-exists: 4.0.0
+    dev: true
+
   /find-up@5.0.0:
     resolution: {integrity: sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng==}
     engines: {node: '>=10'}
@@ -1594,6 +1665,15 @@ packages:
 
   /fraction.js@4.2.0:
     resolution: {integrity: sha512-MhLuK+2gUcnZe8ZHlaaINnQLl0xRIGRfcGk2yl8xoQAfHrSsL3rYu6FCmBdkdbhc9EPlwyGHewaRsvwRMJtAlA==}
+    dev: true
+
+  /fs-extra@10.1.0:
+    resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
+    engines: {node: '>=12'}
+    dependencies:
+      graceful-fs: 4.2.11
+      jsonfile: 6.1.0
+      universalify: 2.0.0
     dev: true
 
   /fs.realpath@1.0.0:
@@ -1775,8 +1855,8 @@ packages:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
     dev: true
 
-  /jiti@1.19.1:
-    resolution: {integrity: sha512-oVhqoRDaBXf7sjkll95LHVS6Myyyb1zaunVwk4Z0+WPSW4gjS0pl01zYKHScTuyEhQsFxV5L4DR5r+YqSyqyyg==}
+  /jiti@1.19.3:
+    resolution: {integrity: sha512-5eEbBDQT/jF1xg6l36P+mWGGoH9Spuy0PCdSr2dtWRDGC6ph/w9ZCL4lmESW8f8F7MwT3XKescfP0wnZWAKL9w==}
     hasBin: true
     dev: true
 
@@ -1793,6 +1873,14 @@ packages:
 
   /json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
+    dev: true
+
+  /jsonfile@6.1.0:
+    resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
+    dependencies:
+      universalify: 2.0.0
+    optionalDependencies:
+      graceful-fs: 4.2.11
     dev: true
 
   /kleur@4.1.5:
@@ -1824,6 +1912,13 @@ packages:
   /locate-character@3.0.0:
     resolution: {integrity: sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA==}
 
+  /locate-path@5.0.0:
+    resolution: {integrity: sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==}
+    engines: {node: '>=8'}
+    dependencies:
+      p-locate: 4.1.0
+    dev: true
+
   /locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
@@ -1854,6 +1949,13 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
+
+  /make-dir@3.1.0:
+    resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
+    engines: {node: '>=8'}
+    dependencies:
+      semver: 6.3.1
+    dev: true
 
   /mdn-data@2.0.30:
     resolution: {integrity: sha512-GaqWWShW4kv/G9IEucWScBx9G1/vsFZZJUO+tD26M8J8z3Kw5RDQjaoZe03YAClgeS/SWPOcb4nkFBTEi5DUEA==}
@@ -1973,6 +2075,13 @@ packages:
       type-check: 0.4.0
     dev: true
 
+  /p-limit@2.3.0:
+    resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}
+    engines: {node: '>=6'}
+    dependencies:
+      p-try: 2.2.0
+    dev: true
+
   /p-limit@3.1.0:
     resolution: {integrity: sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==}
     engines: {node: '>=10'}
@@ -1980,11 +2089,23 @@ packages:
       yocto-queue: 0.1.0
     dev: true
 
+  /p-locate@4.1.0:
+    resolution: {integrity: sha512-R79ZZ/0wAxKGu3oYMlz8jy/kbhsNrS7SKZ7PxEHBgJ5+F2mtFW2fK2cOtBh1cHYkQsbzFV7I+EoRKe6Yt0oK7A==}
+    engines: {node: '>=8'}
+    dependencies:
+      p-limit: 2.3.0
+    dev: true
+
   /p-locate@5.0.0:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
     dependencies:
       p-limit: 3.1.0
+    dev: true
+
+  /p-try@2.2.0:
+    resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
+    engines: {node: '>=6'}
     dev: true
 
   /parent-module@1.0.1:
@@ -2042,6 +2163,13 @@ packages:
   /pirates@4.0.6:
     resolution: {integrity: sha512-saLsH7WeYYPiD25LDuLRRY/i+6HaPYr6G1OUlN39otzkSTxKnubR9RTxS3/Kk50s1g2JTgFwWQDQyplC5/SHZg==}
     engines: {node: '>= 6'}
+    dev: true
+
+  /pkg-dir@4.2.0:
+    resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
+    engines: {node: '>=8'}
+    dependencies:
+      find-up: 4.1.0
     dev: true
 
   /postcss-import@15.1.0(postcss@8.4.28):
@@ -2263,6 +2391,21 @@ packages:
       svelte: 4.2.0
     dev: true
 
+  /rollup-plugin-typescript2@0.35.0(rollup@3.28.0)(typescript@5.1.6):
+    resolution: {integrity: sha512-szcIO9hPUx3PhQl91u4pfNAH2EKbtrXaES+m163xQVE5O1CC0ea6YZV/5woiDDW3CR9jF2CszPrKN+AFiND0bg==}
+    peerDependencies:
+      rollup: '>=1.26.3'
+      typescript: '>=2.4.0'
+    dependencies:
+      '@rollup/pluginutils': 4.2.1
+      find-cache-dir: 3.3.2
+      fs-extra: 10.1.0
+      rollup: 3.28.0
+      semver: 7.5.4
+      tslib: 2.6.2
+      typescript: 5.1.6
+    dev: true
+
   /rollup-pluginutils@2.8.2:
     resolution: {integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==}
     dependencies:
@@ -2299,14 +2442,19 @@ packages:
       rimraf: 2.7.1
     dev: true
 
-  /sass@1.65.1:
-    resolution: {integrity: sha512-9DINwtHmA41SEd36eVPQ9BJKpn7eKDQmUHmpI0y5Zv2Rcorrh0zS+cFrt050hdNbmmCNKTW3hV5mWfuegNRsEA==}
+  /sass@1.66.0:
+    resolution: {integrity: sha512-C3U+RgpAAlTXULZkWwzfysgbbBBo8IZudNAOJAVBLslFbIaZv4MBPkTqhuvpK4lqgdoFiWhnOGMoV4L1FyOBag==}
     engines: {node: '>=14.0.0'}
     hasBin: true
     dependencies:
       chokidar: 3.5.3
       immutable: 4.3.2
       source-map-js: 1.0.2
+    dev: true
+
+  /semver@6.3.1:
+    resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
+    hasBin: true
     dev: true
 
   /semver@7.5.4:
@@ -2513,7 +2661,7 @@ packages:
       typescript: 5.1.6
     dev: true
 
-  /svelte-preprocess@5.0.4(postcss@8.4.28)(sass@1.65.1)(svelte@4.2.0)(typescript@5.1.6):
+  /svelte-preprocess@5.0.4(postcss@8.4.28)(sass@1.66.0)(svelte@4.2.0)(typescript@5.1.6):
     resolution: {integrity: sha512-ABia2QegosxOGsVlsSBJvoWeXy1wUKSfF7SWJdTjLAbx/Y3SrVevvvbFNQqrSJw89+lNSsM58SipmZJ5SRi5iw==}
     engines: {node: '>= 14.10.0'}
     requiresBuild: true
@@ -2555,7 +2703,7 @@ packages:
       detect-indent: 6.1.0
       magic-string: 0.27.0
       postcss: 8.4.28
-      sass: 1.65.1
+      sass: 1.66.0
       sorcery: 0.11.0
       strip-indent: 3.0.0
       svelte: 4.2.0
@@ -2593,7 +2741,7 @@ packages:
       fast-glob: 3.3.1
       glob-parent: 6.0.2
       is-glob: 4.0.3
-      jiti: 1.19.1
+      jiti: 1.19.3
       lilconfig: 2.1.0
       micromatch: 4.0.5
       normalize-path: 3.0.0
@@ -2653,8 +2801,8 @@ packages:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
     dev: true
 
-  /tslib@2.6.1:
-    resolution: {integrity: sha512-t0hLfiEKfMUoqhG+U1oid7Pva4bbDPHYfJNiB7BiIjRkj1pyC++4N3huJfqY6aRH6VTB0rvtzQwjM4K6qpfOig==}
+  /tslib@2.6.2:
+    resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
     dev: true
 
   /type-check@0.4.0:
@@ -2680,6 +2828,11 @@ packages:
     engines: {node: '>=14.0'}
     dependencies:
       busboy: 1.6.0
+    dev: true
+
+  /universalify@2.0.0:
+    resolution: {integrity: sha512-hAZsKq7Yy11Zu1DE0OzWjw7nnLZmJZYTDZZyEFHZdUhV8FkH5MCfoU1XMaxXovpyW5nq5scPqq0ZDP9Zyl04oQ==}
+    engines: {node: '>= 10.0.0'}
     dev: true
 
   /update-browserslist-db@1.0.11(browserslist@4.21.10):

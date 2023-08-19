@@ -6,6 +6,7 @@ fn main() {
         .plugin(tauri_plugin_websocket::init())
         .plugin(tauri_plugin_acfunlive_neotool_base::init())
         .plugin(tauri_plugin_acfunlive_neotool_keyboard::init())
+        .plugin(tauri_plugin_acfunlive_neotool_serve_files::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

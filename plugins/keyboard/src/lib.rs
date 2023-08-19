@@ -101,6 +101,7 @@ async fn simulate_input(manager: State<'_, InputManager>, input: Input) -> Resul
 }
 
 /// Initializes the plugin.
+#[inline]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("acfunlive-neotool-keyboard")
         .invoke_handler(tauri::generate_handler![

@@ -1,4 +1,4 @@
-import type { AppShared } from '@acfunlive-neotool/shared';
+import type { AppData } from '@acfunlive-neotool/shared';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { BaseDirectory, createDir, exists, readTextFile, writeTextFile } from '@tauri-apps/api/fs';
 import { join } from '@tauri-apps/api/path';
@@ -44,7 +44,7 @@ export async function saveConfig(config: Config): Promise<void> {
 export async function loadApp(
   jsPath: string,
   target: Element,
-  shared: AppShared,
+  data: AppData,
   cssPath?: string
 ): Promise<void> {
   if (cssPath) {
@@ -64,7 +64,7 @@ export async function loadApp(
 
   new component({
     target: target,
-    props: { shared }
+    props: { data }
   });
 }
 

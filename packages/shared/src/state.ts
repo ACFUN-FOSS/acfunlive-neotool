@@ -1,32 +1,32 @@
-export enum StateFlag {
+enum StateFlag {
   Disconnect = 0,
   Connect = 1 << 0,
   Login = 1 << 1
 }
 
 export class SessionState {
-  state: StateFlag;
+  #state: StateFlag;
 
   constructor() {
-    this.state = StateFlag.Disconnect;
+    this.#state = StateFlag.Disconnect;
   }
 
   isConnect(): boolean {
-    return (this.state & StateFlag.Connect) === StateFlag.Connect;
+    return (this.#state & StateFlag.Connect) === StateFlag.Connect;
   }
 
   isLogin(): boolean {
-    return (this.state & StateFlag.Login) === StateFlag.Login;
+    return (this.#state & StateFlag.Login) === StateFlag.Login;
   }
 
   disconnect(): this {
-    this.state = StateFlag.Disconnect;
+    this.#state = StateFlag.Disconnect;
 
     return this;
   }
 
   connect(): this {
-    this.state = StateFlag.Connect;
+    this.#state = StateFlag.Connect;
 
     return this;
   }
@@ -39,7 +39,7 @@ export class SessionState {
 
   login(): this {
     this.checkConnect();
-    this.state |= StateFlag.Login;
+    this.#state |= StateFlag.Login;
 
     return this;
   }

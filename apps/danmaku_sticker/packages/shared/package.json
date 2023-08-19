@@ -1,0 +1,21 @@
+{
+  "name": "@acfunlive-neotool/danmaku-sticker-shared",
+  "version": "0.1.0",
+  "description": "danmaku sticker for AcFun live (shared package)",
+  "keywords": [
+    "acfun",
+    "acfunlive"
+  ],
+  "license": "AGPL-3.0-only",
+  "author": "orzogc",
+  "type": "module",
+  "main": "index.ts",
+  "dependencies": {
+    "@acfunlive-neotool/shared": "link:../../../../packages/shared"
+  },
+  "devDependencies": {
+    "tslib": "^2.6.2",
+    "typescript": "^5.1.6"
+  },
+  "packageManager": "pnpm@8.6.11"
+}

@@ -1,0 +1,16 @@
+[package]
+name = "tauri-plugin-acfunlive-neotool-serve-files"
+version = "0.1.0"
+authors.workspace = true
+license.workspace = true
+description = "acfunlive-neotool tauri plugin for serving html files"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+file-serve = { version = "0.2.4", path = "../../../../rust/cobalt.rs/crates/file-serve" }
+once_cell.workspace = true
+serde.workspace = true
+tauri = { version = "1.4.1" }
+thiserror.workspace = true
+tokio = { version = "1.32.0", features = ["sync"] }

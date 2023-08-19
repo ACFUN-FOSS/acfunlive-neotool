@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AppShared } from '@acfunlive-neotool/shared';
+  import type { AppData } from '@acfunlive-neotool/shared';
   import { onDestroy } from 'svelte';
 
   import { loadConfig, saveConfig, keysToRegex, simulate, type KeyConfig } from './scripts/key';
@@ -8,11 +8,11 @@
 
   import './app.css';
 
-  export let shared: AppShared;
+  export let data: AppData;
 
-  const enable = shared.enable;
+  const enable = data.enable;
 
-  const liverUID = shared.data.liverUID;
+  const liverUID = data.data.liverUID;
 
   let config: KeyConfig | undefined;
 
@@ -42,7 +42,7 @@
     }
 
     if ($liverUID) {
-      unsubscribe = shared.session.on(
+      unsubscribe = data.session.on(
         'comment',
         (damaku) => {
           if ($enable && regex) {

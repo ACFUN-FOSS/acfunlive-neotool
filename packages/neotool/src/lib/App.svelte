@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { type UserInfo, SessionData, SharedData } from '@acfunlive-neotool/shared';
-  import { default as tauriSession } from 'acfunlive-backend-js/tauri.js';
+  import { type UserInfo, SessionData, SharedData, neotoolID } from '@acfunlive-neotool/shared';
+  import tauriSession from 'acfunlive-backend-js/tauri.js';
   import { onDestroy } from 'svelte';
   import { writable, get, readonly, type Writable } from 'svelte/store';
   import type { AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
@@ -24,12 +24,12 @@
 
   $: config && saveConfig(config).catch((e) => console.log(`failed to save config: ${e}`));
 
-  type AppData = {
+  type AppConfigData = {
     config: AppConfig;
     enable: Writable<boolean>;
   };
 
-  let appsConfig: AppData[] | undefined;
+  let appsConfig: AppConfigData[] | undefined;
 
   let selectedApp = 0;
 
@@ -44,7 +44,7 @@
       .catch((e) => console.log(`failed to load Apps config: ${e}`));
   }
 
-  const session = new SessionData(tauriSession());
+  const session = new SessionData(tauriSession(), neotoolID);
 
   const state = session.stateReadable;
 
@@ -86,7 +86,7 @@
       if (config) {
         if (config.liverUID) {
           if (config.liverUID !== uid.detail) {
-            // 停止获取弹幕后会重新获取弹幕
+            // 停止获取旧的弹幕后会重新获取新的弹幕
             session.stopDanmakuCyclically(config.liverUID);
             config.liverUID = uid.detail;
           }
@@ -136,8 +136,9 @@
         <div class:hidden={selectedApp !== i}>
           <SubApp
             config={appConfig.config}
-            shared={{
+            data={{
               session: session.session,
+              config: appConfig.config,
               data: new SharedData(session),
               enable: readonly(appConfig.enable)
             }}

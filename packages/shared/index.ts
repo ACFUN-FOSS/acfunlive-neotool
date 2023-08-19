@@ -4,8 +4,18 @@ import { type Readable, readonly } from 'svelte/store';
 import type { TokenInfo, UserInfo, StreamInfo, SessionData } from './src/session.js';
 import type { SessionState } from './src/state.js';
 
+export * from './src/message.js';
 export * from './src/session.js';
 export * from './src/state.js';
+
+export type AppConfig = {
+  id: string;
+  name: string;
+  path: string;
+  description?: string;
+  entry: string;
+  css?: string;
+};
 
 export class SharedData {
   state: Readable<SessionState>;
@@ -30,8 +40,9 @@ export class SharedData {
   }
 }
 
-export type AppShared = {
+export type AppData = {
   session: Session;
+  config: AppConfig;
   data: SharedData;
   enable: Readable<boolean>;
 };
