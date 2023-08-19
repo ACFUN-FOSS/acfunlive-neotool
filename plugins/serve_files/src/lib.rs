@@ -80,7 +80,7 @@ async fn start_serve(
 #[inline]
 async fn stop_serve(manager: State<'_, ServerManager>, id: Id) -> Result<()> {
     if let Some(server) = manager.0.lock().await.remove(&id) {
-        server.shutdown();
+        server.close();
     }
 
     Ok(())

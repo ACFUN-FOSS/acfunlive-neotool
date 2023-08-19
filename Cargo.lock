@@ -736,6 +736,7 @@ dependencies = [
 [[package]]
 name = "file-serve"
 version = "0.2.4"
+source = "git+https://github.com/orzogc/cobalt.rs.git?branch=serve#da62ecb1ce27677d3f7da4e1970a0f3e17c6f22a"
 dependencies = [
  "log",
  "mime_guess",

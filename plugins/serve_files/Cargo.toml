@@ -8,7 +8,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-file-serve = { version = "0.2.4", path = "../../../../rust/cobalt.rs/crates/file-serve" }
+file-serve = { git = "https://github.com/orzogc/cobalt.rs.git", branch = "serve", version = "0.2.4" }
 once_cell.workspace = true
 serde.workspace = true
 tauri = { version = "1.4.1" }
