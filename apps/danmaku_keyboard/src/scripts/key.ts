@@ -11,7 +11,7 @@ const defaultInterval = 100;
 export class KeyData {
   danmaku: string;
   keys: Input[];
-  intervals: number[];
+  intervals: (number | undefined | null)[];
   enable: boolean;
 
   constructor(danmaku: string, keys: Input[]) {
@@ -45,10 +45,12 @@ export async function simulate(keyData: KeyData): Promise<void> {
     } else if ('KeyUp' in key) {
       if (isKeyDown) {
         const interval = keyData.intervals[index];
-        if (interval !== undefined) {
+        if (interval !== undefined && interval !== null && interval >= 0) {
           await delay(interval);
-          index++;
+        } else {
+          await delay(defaultInterval);
         }
+        index++;
       }
       isKeyDown = false;
     }
@@ -57,7 +59,17 @@ export async function simulate(keyData: KeyData): Promise<void> {
   }
 }
 
-export type KeyConfig = { keys: KeyData[] };
+export async function waitInterval(config: KeyConfig | undefined): Promise<void> {
+  if (config) {
+    if (config.interval !== undefined && config.interval !== null && config.interval >= 0) {
+      await delay(config.interval);
+    } else {
+      await delay(defaultInterval);
+    }
+  }
+}
+
+export type KeyConfig = { interval: number | undefined | null; keys: KeyData[] };
 
 const configDir = 'danmaku_keyboard';
 
@@ -68,9 +80,17 @@ const fsOption = { dir: BaseDirectory.AppConfig };
 export async function loadConfig(): Promise<KeyConfig> {
   const path = await join(configDir, configFile);
   if (await exists(path, fsOption)) {
-    return JSON.parse(await readTextFile(path, fsOption));
+    const config: KeyConfig = JSON.parse(await readTextFile(path, fsOption));
+    if (config.interval === undefined || config.interval === null || config.interval < 0) {
+      config.interval = defaultInterval;
+    }
+    if (config.keys === undefined || config.keys === null) {
+      config.keys = [];
+    }
+
+    return config;
   } else {
-    return { keys: [] };
+    return { interval: defaultInterval, keys: [] };
   }
 }
 
@@ -95,5 +115,5 @@ export function keysToString(keys: Input[]): string {
 }
 
 export function keysToRegex(keys: KeyData[]): RegExp {
-  return new RegExp(keys.map((key) => `@(${key.danmaku})`).join('|'), 'i');
+  return new RegExp(keys.map((key) => `@(${key.danmaku})`).join('|'), 'ig');
 }

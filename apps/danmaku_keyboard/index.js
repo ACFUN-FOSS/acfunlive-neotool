@@ -860,14 +860,29 @@ function simulate(keyData) {
             else if ('KeyUp' in key) {
                 if (isKeyDown) {
                     const interval = keyData.intervals[index];
-                    if (interval !== undefined) {
+                    if (interval !== undefined && interval !== null && interval >= 0) {
                         yield delay(interval);
-                        index++;
                     }
+                    else {
+                        yield delay(defaultInterval);
+                    }
+                    index++;
                 }
                 isKeyDown = false;
             }
             yield simulate_input(key);
+        }
+    });
+}
+function waitInterval(config) {
+    return __awaiter$1(this, void 0, void 0, function* () {
+        if (config) {
+            if (config.interval !== undefined && config.interval !== null && config.interval >= 0) {
+                yield delay(config.interval);
+            }
+            else {
+                yield delay(defaultInterval);
+            }
         }
     });
 }
@@ -878,10 +893,17 @@ function loadConfig() {
     return __awaiter$1(this, void 0, void 0, function* () {
         const path = yield E(configDir, configFile);
         if (yield v$1(path, fsOption)) {
-            return JSON.parse(yield l$1(path, fsOption));
+            const config = JSON.parse(yield l$1(path, fsOption));
+            if (config.interval === undefined || config.interval === null || config.interval < 0) {
+                config.interval = defaultInterval;
+            }
+            if (config.keys === undefined || config.keys === null) {
+                config.keys = [];
+            }
+            return config;
         }
         else {
-            return { keys: [] };
+            return { interval: defaultInterval, keys: [] };
         }
     });
 }
@@ -905,7 +927,7 @@ function keysToString(keys) {
         .join(' ');
 }
 function keysToRegex(keys) {
-    return new RegExp(keys.map((key) => `@(${key.danmaku})`).join('|'), 'i');
+    return new RegExp(keys.map((key) => `@(${key.danmaku})`).join('|'), 'ig');
 }
 
 const trashIcon = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -1658,19 +1680,26 @@ class Key extends SvelteComponent {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[14] = list[i];
-	child_ctx[15] = list;
-	child_ctx[16] = i;
+	child_ctx[16] = list[i];
+	child_ctx[17] = list;
+	child_ctx[18] = i;
 	return child_ctx;
 }
 
-// (59:2) {#if config}
+// (73:2) {#if config}
 function create_if_block_1(ctx) {
+	let div1;
+	let div0;
+	let t1;
+	let input;
+	let t2;
 	let table;
 	let thead;
-	let t7;
+	let t10;
 	let tbody;
 	let current;
+	let mounted;
+	let dispose;
 	let each_value = ensure_array_like(/*config*/ ctx[0].keys);
 	let each_blocks = [];
 
@@ -1684,22 +1713,39 @@ function create_if_block_1(ctx) {
 
 	return {
 		c() {
+			div1 = element("div");
+			div0 = element("div");
+			div0.textContent = "单个弹幕连续触发按键的间隔时长（毫秒）";
+			t1 = space();
+			input = element("input");
+			t2 = space();
 			table = element("table");
 			thead = element("thead");
 			thead.innerHTML = `<tr><th></th> <th class="text-base">触发弹幕</th> <th class="text-base">触发按键</th> <th class="text-base">按键时长（毫秒）</th> <th></th></tr>`;
-			t7 = space();
+			t10 = space();
 			tbody = element("tbody");
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].c();
 			}
 
+			attr(input, "type", "number");
+			attr(input, "min", "0");
+			attr(input, "max", "10000000");
+			attr(input, "step", "100");
+			attr(div1, "class", "flex flex-row space-x-3");
 			attr(table, "class", "table table-zebra");
 		},
 		m(target, anchor) {
+			insert(target, div1, anchor);
+			append(div1, div0);
+			append(div1, t1);
+			append(div1, input);
+			set_input_value(input, /*config*/ ctx[0].interval);
+			insert(target, t2, anchor);
 			insert(target, table, anchor);
 			append(table, thead);
-			append(table, t7);
+			append(table, t10);
 			append(table, tbody);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
@@ -1709,8 +1755,17 @@ function create_if_block_1(ctx) {
 			}
 
 			current = true;
+
+			if (!mounted) {
+				dispose = listen(input, "input", /*input_input_handler*/ ctx[9]);
+				mounted = true;
+			}
 		},
 		p(ctx, dirty) {
+			if (dirty & /*config*/ 1 && to_number(input.value) !== /*config*/ ctx[0].interval) {
+				set_input_value(input, /*config*/ ctx[0].interval);
+			}
+
 			if (dirty & /*config*/ 1) {
 				each_value = ensure_array_like(/*config*/ ctx[0].keys);
 				let i;
@@ -1758,32 +1813,36 @@ function create_if_block_1(ctx) {
 		},
 		d(detaching) {
 			if (detaching) {
+				detach(div1);
+				detach(t2);
 				detach(table);
 			}
 
 			destroy_each(each_blocks, detaching);
+			mounted = false;
+			dispose();
 		}
 	};
 }
 
-// (71:8) {#each config.keys as key, i}
+// (89:8) {#each config.keys as key, i}
 function create_each_block(ctx) {
 	let keydata;
 	let updating_key;
 	let current;
 
 	function keydata_key_binding(value) {
-		/*keydata_key_binding*/ ctx[9](value, /*key*/ ctx[14], /*each_value*/ ctx[15], /*i*/ ctx[16]);
+		/*keydata_key_binding*/ ctx[10](value, /*key*/ ctx[16], /*each_value*/ ctx[17], /*i*/ ctx[18]);
 	}
 
 	function delete_handler() {
-		return /*delete_handler*/ ctx[10](/*i*/ ctx[16]);
+		return /*delete_handler*/ ctx[11](/*i*/ ctx[18]);
 	}
 
 	let keydata_props = {};
 
-	if (/*key*/ ctx[14] !== void 0) {
-		keydata_props.key = /*key*/ ctx[14];
+	if (/*key*/ ctx[16] !== void 0) {
+		keydata_props.key = /*key*/ ctx[16];
 	}
 
 	keydata = new Key({ props: keydata_props });
@@ -1804,7 +1863,7 @@ function create_each_block(ctx) {
 
 			if (!updating_key && dirty & /*config*/ 1) {
 				updating_key = true;
-				keydata_changes.key = /*key*/ ctx[14];
+				keydata_changes.key = /*key*/ ctx[16];
 				add_flush_callback(() => updating_key = false);
 			}
 
@@ -1825,14 +1884,14 @@ function create_each_block(ctx) {
 	};
 }
 
-// (87:0) {#if openInput}
+// (105:0) {#if openInput}
 function create_if_block(ctx) {
 	let input;
 	let updating_isOpen;
 	let current;
 
 	function input_isOpen_binding(value) {
-		/*input_isOpen_binding*/ ctx[12](value);
+		/*input_isOpen_binding*/ ctx[13](value);
 	}
 
 	let input_props = {};
@@ -1843,7 +1902,7 @@ function create_if_block(ctx) {
 
 	input = new Input({ props: input_props });
 	binding_callbacks.push(() => bind(input, 'isOpen', input_isOpen_binding));
-	input.$on("key", /*key_handler*/ ctx[13]);
+	input.$on("key", /*key_handler*/ ctx[14]);
 
 	return {
 		c() {
@@ -1922,7 +1981,7 @@ function create_fragment(ctx) {
 			current = true;
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*click_handler*/ ctx[11]);
+				dispose = listen(button, "click", /*click_handler*/ ctx[12]);
 				mounted = true;
 			}
 		},
@@ -2002,6 +2061,43 @@ function create_fragment(ctx) {
 function instance($$self, $$props, $$invalidate) {
 	let $liverUID;
 	let $enable;
+
+	var __awaiter = this && this.__awaiter || function (thisArg, _arguments, P, generator) {
+		function adopt(value) {
+			return value instanceof P
+			? value
+			: new P(function (resolve) {
+						resolve(value);
+					});
+		}
+
+		return new (P || (P = Promise))(function (resolve, reject) {
+				function fulfilled(value) {
+					try {
+						step(generator.next(value));
+					} catch(e) {
+						reject(e);
+					}
+				}
+
+				function rejected(value) {
+					try {
+						step(generator["throw"](value));
+					} catch(e) {
+						reject(e);
+					}
+				}
+
+				function step(result) {
+					result.done
+					? resolve(result.value)
+					: adopt(result.value).then(fulfilled, rejected);
+				}
+
+				step((generator = generator.apply(thisArg, _arguments || [])).next());
+			});
+	};
+
 	let { data } = $$props;
 	const enable = data.enable;
 	component_subscribe($$self, enable, value => $$invalidate(8, $enable = value));
@@ -2019,6 +2115,11 @@ function instance($$self, $$props, $$invalidate) {
 			$$invalidate(6, unsubscribe = undefined);
 		}
 	});
+
+	function input_input_handler() {
+		config.interval = to_number(this.value);
+		$$invalidate(0, config);
+	}
 
 	function keydata_key_binding(value, key, each_value, i) {
 		each_value[i] = value;
@@ -2071,11 +2172,9 @@ function instance($$self, $$props, $$invalidate) {
 				if ($liverUID) {
 					$$invalidate(6, unsubscribe = data.session.on(
 						'comment',
-						damaku => {
+						damaku => __awaiter(void 0, void 0, void 0, function* () {
 							if ($enable && regex) {
-								let match = damaku.data.content.match(regex);
-
-								if (match) {
+								for (const match of damaku.data.content.matchAll(regex)) {
 									for (const [i, group] of match.slice(1).entries()) {
 										if (group) {
 											const key = config === null || config === void 0
@@ -2083,14 +2182,21 @@ function instance($$self, $$props, $$invalidate) {
 											: config.keys[i];
 
 											if (key === null || key === void 0 ? void 0 : key.enable) {
-												simulate(key).catch(e => console.log(`failed to simulate keyboard input: ${e}`));
-												return;
+												try {
+													yield simulate(key);
+												} catch(e) {
+													console.log(`failed to simulate keyboard input: ${e}`);
+												}
+
+												break;
 											}
 										}
 									}
+
+									yield waitInterval(config);
 								}
 							}
-						},
+						}),
 						$liverUID
 					));
 				}
@@ -2108,6 +2214,7 @@ function instance($$self, $$props, $$invalidate) {
 		unsubscribe,
 		$liverUID,
 		$enable,
+		input_input_handler,
 		keydata_key_binding,
 		delete_handler,
 		click_handler,

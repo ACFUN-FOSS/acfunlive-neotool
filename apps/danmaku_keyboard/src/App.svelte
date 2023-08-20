@@ -2,7 +2,14 @@
   import type { AppData } from '@acfunlive-neotool/shared';
   import { onDestroy } from 'svelte';
 
-  import { loadConfig, saveConfig, keysToRegex, simulate, type KeyConfig } from './scripts/key';
+  import {
+    loadConfig,
+    saveConfig,
+    keysToRegex,
+    simulate,
+    waitInterval,
+    type KeyConfig
+  } from './scripts/key';
   import KeyData from './components/Key.svelte';
   import Input from './components/Input.svelte';
 
@@ -44,21 +51,25 @@
     if ($liverUID) {
       unsubscribe = data.session.on(
         'comment',
-        (damaku) => {
+        async (damaku) => {
           if ($enable && regex) {
-            let match = damaku.data.content.match(regex);
-            if (match) {
+            for (const match of damaku.data.content.matchAll(regex)) {
               for (const [i, group] of match.slice(1).entries()) {
                 if (group) {
                   const key = config?.keys[i];
                   if (key?.enable) {
-                    simulate(key).catch((e) =>
-                      console.log(`failed to simulate keyboard input: ${e}`)
-                    );
-                    return;
+                    try {
+                      await simulate(key);
+                    } catch (e) {
+                      console.log(`failed to simulate keyboard input: ${e}`);
+                    }
+
+                    break;
                   }
                 }
               }
+
+              await waitInterval(config);
             }
           }
         },
@@ -78,6 +89,10 @@
 <div class="flex flex-col content-between p-5 space-y-5">
   <div>说明：弹幕前面需要加 @ 符号来触发</div>
   {#if config}
+    <div class="flex flex-row space-x-3">
+      <div>单个弹幕连续触发按键的间隔时长（毫秒）</div>
+      <input type="number" bind:value={config.interval} min="0" max="10000000" step="100" />
+    </div>
     <table class="table table-zebra">
       <thead>
         <tr>

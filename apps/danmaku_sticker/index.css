@@ -823,3 +823,13 @@ html {
 .flex {
   display: flex;
 }
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+@media (prefers-color-scheme: light) {
+  html {
+    color-scheme: dark;
+  }
+}
