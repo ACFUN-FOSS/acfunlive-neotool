@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type UserInfo, SessionData, SharedData, neotoolID } from '@acfunlive-neotool/shared';
+  import { type UserInfo, SessionData, neotoolID } from '@acfunlive-neotool/shared';
   import tauriSession from 'acfunlive-backend-js/tauri.js';
   import { onDestroy } from 'svelte';
   import { writable, get, readonly, type Writable } from 'svelte/store';
@@ -52,18 +52,21 @@
 
   const streamInfoMap = session.streamInfoMapReadable;
 
-  const liverUID = session.liverUID;
-  $: $liverUID = config?.liverUID;
-
   const cleanup = session.connect();
 
+  $: if (config?.liverUID !== undefined && config.liverUID > 0) {
+    session.liverUID = config.liverUID;
+  }
+
   let userInfo: UserInfo | undefined;
-  $: if (config?.liverUID !== undefined) {
+
+  $: if (config?.liverUID !== undefined && config.liverUID > 0) {
     userInfo = $userInfoMap.get(config.liverUID);
   }
 
   let isGettingDanmaku = false;
-  $: if (config?.liverUID !== undefined) {
+
+  $: if (config?.liverUID !== undefined && config.liverUID > 0) {
     if ($streamInfoMap.get(config.liverUID)) {
       isGettingDanmaku = true;
     } else {
@@ -71,32 +74,17 @@
     }
   }
 
-  $: if (config?.liverUID !== undefined && $state.isConnect() && $state.isLogin()) {
+  $: if (
+    config?.liverUID !== undefined &&
+    config.liverUID > 0 &&
+    $state.isConnect() &&
+    $state.isLogin()
+  ) {
     session.getDanmakuCyclically(config?.liverUID);
   }
 
   onDestroy(cleanup);
 </script>
-
-{#if config && (config.liverUID === undefined || openUIDDialog)}
-  <LiverUIDDialog
-    bind:isOpen={openUIDDialog}
-    text={config?.liverUID?.toString()}
-    on:liverUID={(uid) => {
-      if (config) {
-        if (config.liverUID) {
-          if (config.liverUID !== uid.detail) {
-            // 停止获取旧的弹幕后会重新获取新的弹幕
-            session.stopDanmakuCyclically(config.liverUID);
-            config.liverUID = uid.detail;
-          }
-        } else {
-          config.liverUID = uid.detail;
-        }
-      }
-    }}
-  />
-{/if}
 
 <div class="flex flex-row justify-between items-center h-16 mx-5">
   <h1>AcFun Neo 直播工具箱</h1>
@@ -137,9 +125,8 @@
           <SubApp
             config={appConfig.config}
             data={{
-              session: session.session,
+              session: session,
               config: appConfig.config,
-              data: new SharedData(session),
               enable: readonly(appConfig.enable)
             }}
           ></SubApp>
@@ -147,4 +134,24 @@
       {/each}
     </div>
   </div>
+{/if}
+
+{#if config && (config.liverUID === undefined || openUIDDialog)}
+  <LiverUIDDialog
+    bind:isOpen={openUIDDialog}
+    text={config?.liverUID?.toString()}
+    on:liverUID={(uid) => {
+      if (config) {
+        if (config.liverUID) {
+          if (config.liverUID !== uid.detail) {
+            // 停止获取旧的弹幕后会重新获取新的弹幕
+            session.stopDanmakuCyclically(config.liverUID);
+            config.liverUID = uid.detail;
+          }
+        } else {
+          config.liverUID = uid.detail;
+        }
+      }
+    }}
+  />
 {/if}

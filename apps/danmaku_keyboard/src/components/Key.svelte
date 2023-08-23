@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { trashIcon, editIcon } from '@acfunlive-neotool/shared';
   import { createEventDispatcher } from 'svelte';
 
   import { KeyData, keysToString } from '../scripts/key';
-  import { trashIcon, editIcon } from '../scripts/svg';
   import Input from './Input.svelte';
 
   export let key: KeyData;

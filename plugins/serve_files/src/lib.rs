@@ -32,7 +32,7 @@ impl Serialize for Error {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct ServerManager(Mutex<HashMap<Id, Arc<Server>>>);
 
 #[command]

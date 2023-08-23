@@ -6,7 +6,7 @@ import type {
   streamInfo,
   unsubscribe
 } from 'acfunlive-backend-js/tauri.js';
-import { writable, get, readonly, type Writable } from 'svelte/store';
+import { writable, get, readonly, type Writable, type Readable } from 'svelte/store';
 
 import type { MessageType, Message } from './message.js';
 import { SessionState } from './state.js';
@@ -28,11 +28,11 @@ export class SessionData {
 
   #clientID: string;
 
-  liverUID: Writable<number | undefined>;
+  #liverUID: Writable<number | undefined>;
 
-  loginData: Writable<LoginData | undefined>;
+  #loginData: Writable<LoginData | undefined>;
 
-  token: Writable<TokenInfo | undefined>;
+  #token: Writable<TokenInfo | undefined>;
 
   #userInfoMap: Writable<Map<number, UserInfo>>;
 
@@ -45,47 +45,83 @@ export class SessionData {
     this.session = session;
     this.#state = writable(new SessionState());
     this.#clientID = clientID;
-    this.liverUID = writable(liverUID);
-    this.loginData = writable(loginInfo);
-    this.token = writable(undefined);
+    this.#liverUID = writable(liverUID);
+    this.#loginData = writable(loginInfo);
+    this.#token = writable(undefined);
     this.#userInfoMap = writable(new Map());
     this.#streamInfoMap = writable(new Map());
     this.#getDanmakuCycleSet = writable(new Set());
   }
 
-  get state() {
+  get state(): SessionState {
     return get(this.#state);
   }
 
-  get stateReadable() {
+  get stateReadable(): Readable<SessionState> {
     return readonly(this.#state);
   }
 
-  get clientID() {
+  get clientID(): string {
     return this.#clientID;
   }
 
-  get userInfoMap() {
+  get liverUID(): number | undefined {
+    return get(this.#liverUID);
+  }
+
+  set liverUID(uid: number) {
+    this.#liverUID.set(uid);
+  }
+
+  get liverUIDReadable(): Readable<number | undefined> {
+    return readonly(this.#liverUID);
+  }
+
+  get loginData(): LoginData | undefined {
+    return get(this.#loginData);
+  }
+
+  set loginData(data: LoginData) {
+    this.#loginData.set(data);
+  }
+
+  get loginDataReadable(): Readable<LoginData | undefined> {
+    return readonly(this.#loginData);
+  }
+
+  get token(): TokenInfo | undefined {
+    return get(this.#token);
+  }
+
+  set token(t: TokenInfo) {
+    this.#token.set(t);
+  }
+
+  get tokenReadable(): Readable<TokenInfo | undefined> {
+    return readonly(this.#token);
+  }
+
+  get userInfoMap(): Map<number, UserInfo> {
     return get(this.#userInfoMap);
   }
 
-  get userInfoMapReadable() {
+  get userInfoMapReadable(): Readable<Map<number, UserInfo>> {
     return readonly(this.#userInfoMap);
   }
 
-  get streamInfoMap() {
+  get streamInfoMap(): Map<number, StreamInfo> {
     return get(this.#streamInfoMap);
   }
 
-  get streamInfoMapReadable() {
+  get streamInfoMapReadable(): Readable<Map<number, StreamInfo>> {
     return readonly(this.#streamInfoMap);
   }
 
-  get getDanmakuCycleSet() {
+  get getDanmakuCycleSet(): Set<number> {
     return get(this.#getDanmakuCycleSet);
   }
 
-  get getDanmakuCycleSetReadable() {
+  get getDanmakuCycleSetReadable(): Readable<Set<number>> {
     return readonly(this.#getDanmakuCycleSet);
   }
 
@@ -165,7 +201,7 @@ export class SessionData {
 
     return () => {
       this.#state.update((state) => state.disconnect());
-      this.token.set(undefined);
+      this.#token.set(undefined);
       this.#streamInfoMap.set(new Map());
       this.#getDanmakuCycleSet.set(new Set());
       openUnsubscribe();
@@ -224,7 +260,7 @@ export class SessionData {
     }
 
     if (canContinue(this)) {
-      let token = get(this.token);
+      let token = get(this.#token);
       if (token) {
         await this.session.asyncRequest('setToken', token);
         if (canContinue(this)) {
@@ -236,11 +272,11 @@ export class SessionData {
         token = (
           await this.session.asyncRequest(
             'login',
-            get(this.loginData) || { account: '', password: '' }
+            get(this.#loginData) || { account: '', password: '' }
           )
         ).data;
         if (canContinue(this)) {
-          this.token.set(token);
+          this.#token.set(token);
           this.#state.update((state) => state.login());
 
           return true;
@@ -277,7 +313,7 @@ export class SessionData {
       return (
         session.session.isConnecting() &&
         session.#id === id &&
-        get(session.token) !== undefined &&
+        get(session.#token) !== undefined &&
         session.state.isLogin()
       );
     }
@@ -353,7 +389,7 @@ export class SessionData {
     if (
       this.session.isConnecting() &&
       this.#id === id &&
-      get(this.token) &&
+      get(this.#token) &&
       this.isGettingDanmaku(liverUID)
     ) {
       await this.session.asyncRequest('stopDanmaku', { liverUID: liverUID });
@@ -438,27 +474,19 @@ export class SessionData {
     target: keyof M,
     callback: (message: Message<M>) => void
   ): unsubscribe {
-    return onReceiveMessage(this.session, target, callback);
+    return this.session.on('receiveForward', (m) => {
+      const message: Message<M> = JSON.parse(m.data.message);
+      try {
+        if (message.target === target) {
+          callback(message);
+        }
+      } catch (e) {
+        console.log(`receive forwarding message error: ${e}`);
+      }
+    });
   }
 }
 
-export function onReceiveMessage<M extends MessageType>(
-  session: Session,
-  target: keyof M,
-  callback: (message: Message<M>) => void
-): unsubscribe {
-  return session.on('receiveForward', (m) => {
-    const message: Message<M> = JSON.parse(m.data.message);
-    try {
-      if (message.target === target) {
-        callback(message);
-      }
-    } catch (e) {
-      console.log(`receive forwarding message error: ${e}`);
-    }
-  });
-}
-
-function delay(ms: number): Promise<void> {
+export function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }

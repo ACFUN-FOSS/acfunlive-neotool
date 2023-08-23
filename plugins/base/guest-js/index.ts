@@ -16,3 +16,11 @@ export async function loadAppsConfig(appsDir: string): Promise<AppConfig[]> {
 export async function canonicalize(path: string): Promise<string> {
   return await invoke('plugin:acfunlive-neotool-base|canonicalize', { path });
 }
+
+export async function hashFileSha256(path: string): Promise<string> {
+  return await invoke('plugin:acfunlive-neotool-base|hash_file_sha256', { path });
+}
+
+export async function symlinkDir(source: string, destination: string): Promise<void> {
+  return await invoke('plugin:acfunlive-neotool-base|symlink_dir', { source, destination });
+}

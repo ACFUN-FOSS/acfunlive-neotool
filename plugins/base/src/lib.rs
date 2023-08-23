@@ -4,7 +4,7 @@ use tauri::{
     plugin::{Builder, TauriPlugin},
     Runtime,
 };
-use tokio::fs::{read_dir, read_to_string};
+use tokio::fs::{read_dir, read_to_string, remove_dir_all, remove_file, symlink_metadata};
 
 type Result<T> = std::result::Result<T, Error>;
 
@@ -75,10 +75,47 @@ async fn canonicalize(path: String) -> Result<String> {
         .into_owned())
 }
 
+#[command]
+#[inline]
+async fn hash_file_sha256(path: String) -> Result<String> {
+    Ok(sha256::try_async_digest(path).await?)
+}
+
+#[command]
+#[inline]
+async fn symlink_dir(source: String, destination: String) -> Result<()> {
+    if let Ok(data) = symlink_metadata(&destination).await {
+        let src = tokio::fs::canonicalize(&source).await?;
+        let dst = tokio::fs::canonicalize(&destination).await?;
+        if src == dst {
+            return Ok(());
+        }
+
+        if data.is_dir() {
+            remove_dir_all(&destination).await?;
+        } else {
+            remove_file(&destination).await?;
+        }
+    }
+
+    #[cfg(unix)]
+    tokio::fs::symlink(source, destination).await?;
+
+    #[cfg(windows)]
+    tokio::fs::symlink_dir(source, destination).await?;
+
+    Ok(())
+}
+
 /// Initializes the plugin.
 #[inline]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("acfunlive-neotool-base")
-        .invoke_handler(tauri::generate_handler![load_apps_config, canonicalize])
+        .invoke_handler(tauri::generate_handler![
+            load_apps_config,
+            canonicalize,
+            hash_file_sha256,
+            symlink_dir
+        ])
         .build()
 }

@@ -11,6 +11,9 @@
   },
   "tauri": {
     "allowlist": {
+      "dialog": {
+        "open": true
+      },
       "fs": {
         "all": true,
         "scope": [
@@ -28,7 +31,7 @@
       },
       "protocol": {
         "asset": true,
-        "assetScope": ["**/apps/**"]
+        "assetScope": ["**/apps/**", "$APPCONFIG/**", "$APPDATA/**", "$APPCACHE/**"]
       }
     },
     "bundle": {

@@ -739,9 +739,61 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
+var StateFlag;
+(function (StateFlag) {
+    StateFlag[StateFlag["Disconnect"] = 0] = "Disconnect";
+    StateFlag[StateFlag["Connect"] = 1] = "Connect";
+    StateFlag[StateFlag["Login"] = 2] = "Login";
+})(StateFlag || (StateFlag = {}));
+
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const trashIcon = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 -256 1792 1792" id="svg3741" version="1.1" inkscape:version="0.48.3.1 r9886" width="100%" height="100%" sodipodi:docname="trash_font_awesome.svg">
+  <metadata id="metadata3751">
+    <rdf:RDF>
+      <cc:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs id="defs3749"/>
+  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="640" inkscape:window-height="480" id="namedview3747" showgrid="false" inkscape:zoom="0.13169643" inkscape:cx="896" inkscape:cy="896" inkscape:window-x="0" inkscape:window-y="25" inkscape:window-maximized="0" inkscape:current-layer="svg3741"/>
+  <g transform="matrix(1,0,0,-1,197.42373,1255.0508)" id="g3743">
+    <path d="M 512,800 V 224 q 0,-14 -9,-23 -9,-9 -23,-9 h -64 q -14,0 -23,9 -9,9 -9,23 v 576 q 0,14 9,23 9,9 23,9 h 64 q 14,0 23,-9 9,-9 9,-23 z m 256,0 V 224 q 0,-14 -9,-23 -9,-9 -23,-9 h -64 q -14,0 -23,9 -9,9 -9,23 v 576 q 0,14 9,23 9,9 23,9 h 64 q 14,0 23,-9 9,-9 9,-23 z m 256,0 V 224 q 0,-14 -9,-23 -9,-9 -23,-9 h -64 q -14,0 -23,9 -9,9 -9,23 v 576 q 0,14 9,23 9,9 23,9 h 64 q 14,0 23,-9 9,-9 9,-23 z M 1152,76 v 948 H 256 V 76 Q 256,54 263,35.5 270,17 277.5,8.5 285,0 288,0 h 832 q 3,0 10.5,8.5 7.5,8.5 14.5,27 7,18.5 7,40.5 z M 480,1152 h 448 l -48,117 q -7,9 -17,11 H 546 q -10,-2 -17,-11 z m 928,-32 v -64 q 0,-14 -9,-23 -9,-9 -23,-9 h -96 V 76 q 0,-83 -47,-143.5 -47,-60.5 -113,-60.5 H 288 q -66,0 -113,58.5 Q 128,-11 128,72 v 952 H 32 q -14,0 -23,9 -9,9 -9,23 v 64 q 0,14 9,23 9,9 23,9 h 309 l 70,167 q 15,37 54,63 39,26 79,26 h 320 q 40,0 79,-26 39,-26 54,-63 l 70,-167 h 309 q 14,0 23,-9 9,-9 9,-23 z" id="path3745" inkscape:connector-curvature="0" style="fill:currentColor"/>
+  </g>
+</svg>`;
+const editIcon = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 -256 1850 1850" id="svg3025" version="1.1" inkscape:version="0.48.3.1 r9886" width="100%" height="100%" sodipodi:docname="edit_font_awesome.svg">
+  <metadata id="metadata3035">
+    <rdf:RDF>
+      <cc:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs id="defs3033"/>
+  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="640" inkscape:window-height="480" id="namedview3031" showgrid="false" inkscape:zoom="0.13169643" inkscape:cx="896" inkscape:cy="896" inkscape:window-x="0" inkscape:window-y="25" inkscape:window-maximized="0" inkscape:current-layer="svg3025"/>
+  <g transform="matrix(1,0,0,-1,30.372881,1373.7966)" id="g3027">
+    <path d="M 888,352 1004,468 852,620 736,504 v -56 h 96 v -96 h 56 z m 440,720 q -16,16 -33,-1 L 945,721 q -17,-17 -1,-33 16,-16 33,1 l 350,350 q 17,17 1,33 z m 80,-594 V 288 Q 1408,169 1323.5,84.5 1239,0 1120,0 H 288 Q 169,0 84.5,84.5 0,169 0,288 v 832 Q 0,1239 84.5,1323.5 169,1408 288,1408 h 832 q 63,0 117,-25 15,-7 18,-23 3,-17 -9,-29 l -49,-49 q -14,-14 -32,-8 -23,6 -45,6 H 288 q -66,0 -113,-47 -47,-47 -47,-113 V 288 q 0,-66 47,-113 47,-47 113,-47 h 832 q 66,0 113,47 47,47 47,113 v 126 q 0,13 9,22 l 64,64 q 15,15 35,7 20,-8 20,-29 z M 1312,1216 1600,928 928,256 H 640 v 288 z m 444,-132 -92,-92 -288,288 92,92 q 28,28 68,28 40,0 68,-28 l 152,-152 q 28,-28 28,-68 0,-40 -28,-68 z" id="path3029" inkscape:connector-curvature="0" style="fill:currentColor"/>
+  </g>
+</svg>`;
+
 var d$3=Object.defineProperty;var e=(c,a)=>{for(var b in a)d$3(c,b,{get:a[b],enumerable:!0});};
 
 var w$1={};e(w$1,{convertFileSrc:()=>u$2,invoke:()=>d$2,transformCallback:()=>s$1});function l$2(){return window.crypto.getRandomValues(new Uint32Array(1))[0]}function s$1(r,n=!1){let e=l$2(),t=`_${e}`;return Object.defineProperty(window,t,{value:o=>(n&&Reflect.deleteProperty(window,t),r?.(o)),writable:!1,configurable:!0}),e}async function d$2(r,n={}){return new Promise((e,t)=>{let o=s$1(i=>{e(i),Reflect.deleteProperty(window,`_${a}`);},!0),a=s$1(i=>{t(i),Reflect.deleteProperty(window,`_${o}`);},!0);window.__TAURI_IPC__({cmd:r,callback:o,error:a,...n});})}function u$2(r,n="asset"){let e=encodeURIComponent(r);return navigator.userAgent.includes("Windows")?`https://${n}.localhost/${e}`:`${n}://localhost/${e}`}
+
+async function a$1(i){return d$2("tauri",i)}
+
+var x$1={};e(x$1,{BaseDirectory:()=>F$1,Dir:()=>F$1,copyFile:()=>c$1,createDir:()=>d$1,exists:()=>v$1,readBinaryFile:()=>a,readDir:()=>m$1,readTextFile:()=>l$1,removeDir:()=>g$1,removeFile:()=>O,renameFile:()=>_$1,writeBinaryFile:()=>f$1,writeFile:()=>u$1,writeTextFile:()=>u$1});var F$1=(n=>(n[n.Audio=1]="Audio",n[n.Cache=2]="Cache",n[n.Config=3]="Config",n[n.Data=4]="Data",n[n.LocalData=5]="LocalData",n[n.Desktop=6]="Desktop",n[n.Document=7]="Document",n[n.Download=8]="Download",n[n.Executable=9]="Executable",n[n.Font=10]="Font",n[n.Home=11]="Home",n[n.Picture=12]="Picture",n[n.Public=13]="Public",n[n.Runtime=14]="Runtime",n[n.Template=15]="Template",n[n.Video=16]="Video",n[n.Resource=17]="Resource",n[n.App=18]="App",n[n.Log=19]="Log",n[n.Temp=20]="Temp",n[n.AppConfig=21]="AppConfig",n[n.AppData=22]="AppData",n[n.AppLocalData=23]="AppLocalData",n[n.AppCache=24]="AppCache",n[n.AppLog=25]="AppLog",n))(F$1||{});async function l$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"readTextFile",path:i,options:t}})}async function a(i,t={}){let s=await a$1({__tauriModule:"Fs",message:{cmd:"readFile",path:i,options:t}});return Uint8Array.from(s)}async function u$1(i,t,s){typeof s=="object"&&Object.freeze(s),typeof i=="object"&&Object.freeze(i);let e={path:"",contents:""},r=s;return typeof i=="string"?e.path=i:(e.path=i.path,e.contents=i.contents),typeof t=="string"?e.contents=t??"":r=t,a$1({__tauriModule:"Fs",message:{cmd:"writeFile",path:e.path,contents:Array.from(new TextEncoder().encode(e.contents)),options:r}})}async function f$1(i,t,s){typeof s=="object"&&Object.freeze(s),typeof i=="object"&&Object.freeze(i);let e={path:"",contents:[]},r=s;return typeof i=="string"?e.path=i:(e.path=i.path,e.contents=i.contents),t&&"dir"in t?r=t:typeof i=="string"&&(e.contents=t??[]),a$1({__tauriModule:"Fs",message:{cmd:"writeFile",path:e.path,contents:Array.from(e.contents instanceof ArrayBuffer?new Uint8Array(e.contents):e.contents),options:r}})}async function m$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"readDir",path:i,options:t}})}async function d$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"createDir",path:i,options:t}})}async function g$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"removeDir",path:i,options:t}})}async function c$1(i,t,s={}){return a$1({__tauriModule:"Fs",message:{cmd:"copyFile",source:i,destination:t,options:s}})}async function O(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"removeFile",path:i,options:t}})}async function _$1(i,t,s={}){return a$1({__tauriModule:"Fs",message:{cmd:"renameFile",oldPath:i,newPath:t,options:s}})}async function v$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"exists",path:i,options:t}})}
+
+function n$1(){return navigator.appVersion.includes("Win")}
+
+var q={};e(q,{BaseDirectory:()=>F$1,appCacheDir:()=>g,appConfigDir:()=>s,appDataDir:()=>c,appDir:()=>u,appLocalDataDir:()=>m,appLogDir:()=>n,audioDir:()=>d,basename:()=>V,cacheDir:()=>P,configDir:()=>h,dataDir:()=>l,delimiter:()=>z,desktopDir:()=>_,dirname:()=>F,documentDir:()=>p,downloadDir:()=>y,executableDir:()=>f,extname:()=>H,fontDir:()=>D,homeDir:()=>M,isAbsolute:()=>W,join:()=>E,localDataDir:()=>v,logDir:()=>w,normalize:()=>B,pictureDir:()=>b,publicDir:()=>A,resolve:()=>T,resolveResource:()=>x,resourceDir:()=>C,runtimeDir:()=>L,sep:()=>j,templateDir:()=>R,videoDir:()=>k});async function u(){return s()}async function s(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:21}})}async function c(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:22}})}async function m(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:23}})}async function g(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:24}})}async function d(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:1}})}async function P(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:2}})}async function h(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:3}})}async function l(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:4}})}async function _(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:6}})}async function p(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:7}})}async function y(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:8}})}async function f(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:9}})}async function D(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:10}})}async function M(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:11}})}async function v(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:5}})}async function b(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:12}})}async function A(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:13}})}async function C(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:17}})}async function x(t){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:t,directory:17}})}async function L(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:14}})}async function R(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:15}})}async function k(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:16}})}async function w(){return n()}async function n(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:25}})}var j=n$1()?"\\":"/",z=n$1()?";":":";async function T(...t){return a$1({__tauriModule:"Path",message:{cmd:"resolve",paths:t}})}async function B(t){return a$1({__tauriModule:"Path",message:{cmd:"normalize",path:t}})}async function E(...t){return a$1({__tauriModule:"Path",message:{cmd:"join",paths:t}})}async function F(t){return a$1({__tauriModule:"Path",message:{cmd:"dirname",path:t}})}async function H(t){return a$1({__tauriModule:"Path",message:{cmd:"extname",path:t}})}async function V(t,a){return a$1({__tauriModule:"Path",message:{cmd:"basename",path:t,ext:a}})}async function W(t){return a$1({__tauriModule:"Path",message:{cmd:"isAbsolute",path:t}})}
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -816,17 +868,6 @@ function simulate_input(input) {
     });
 }
 
-async function a$1(i){return d$2("tauri",i)}
-
-var x$1={};e(x$1,{BaseDirectory:()=>F$1,Dir:()=>F$1,copyFile:()=>c$1,createDir:()=>d$1,exists:()=>v$1,readBinaryFile:()=>a,readDir:()=>m$1,readTextFile:()=>l$1,removeDir:()=>g$1,removeFile:()=>O,renameFile:()=>_$1,writeBinaryFile:()=>f$1,writeFile:()=>u$1,writeTextFile:()=>u$1});var F$1=(n=>(n[n.Audio=1]="Audio",n[n.Cache=2]="Cache",n[n.Config=3]="Config",n[n.Data=4]="Data",n[n.LocalData=5]="LocalData",n[n.Desktop=6]="Desktop",n[n.Document=7]="Document",n[n.Download=8]="Download",n[n.Executable=9]="Executable",n[n.Font=10]="Font",n[n.Home=11]="Home",n[n.Picture=12]="Picture",n[n.Public=13]="Public",n[n.Runtime=14]="Runtime",n[n.Template=15]="Template",n[n.Video=16]="Video",n[n.Resource=17]="Resource",n[n.App=18]="App",n[n.Log=19]="Log",n[n.Temp=20]="Temp",n[n.AppConfig=21]="AppConfig",n[n.AppData=22]="AppData",n[n.AppLocalData=23]="AppLocalData",n[n.AppCache=24]="AppCache",n[n.AppLog=25]="AppLog",n))(F$1||{});async function l$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"readTextFile",path:i,options:t}})}async function a(i,t={}){let s=await a$1({__tauriModule:"Fs",message:{cmd:"readFile",path:i,options:t}});return Uint8Array.from(s)}async function u$1(i,t,s){typeof s=="object"&&Object.freeze(s),typeof i=="object"&&Object.freeze(i);let e={path:"",contents:""},r=s;return typeof i=="string"?e.path=i:(e.path=i.path,e.contents=i.contents),typeof t=="string"?e.contents=t??"":r=t,a$1({__tauriModule:"Fs",message:{cmd:"writeFile",path:e.path,contents:Array.from(new TextEncoder().encode(e.contents)),options:r}})}async function f$1(i,t,s){typeof s=="object"&&Object.freeze(s),typeof i=="object"&&Object.freeze(i);let e={path:"",contents:[]},r=s;return typeof i=="string"?e.path=i:(e.path=i.path,e.contents=i.contents),t&&"dir"in t?r=t:typeof i=="string"&&(e.contents=t??[]),a$1({__tauriModule:"Fs",message:{cmd:"writeFile",path:e.path,contents:Array.from(e.contents instanceof ArrayBuffer?new Uint8Array(e.contents):e.contents),options:r}})}async function m$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"readDir",path:i,options:t}})}async function d$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"createDir",path:i,options:t}})}async function g$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"removeDir",path:i,options:t}})}async function c$1(i,t,s={}){return a$1({__tauriModule:"Fs",message:{cmd:"copyFile",source:i,destination:t,options:s}})}async function O(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"removeFile",path:i,options:t}})}async function _$1(i,t,s={}){return a$1({__tauriModule:"Fs",message:{cmd:"renameFile",oldPath:i,newPath:t,options:s}})}async function v$1(i,t={}){return a$1({__tauriModule:"Fs",message:{cmd:"exists",path:i,options:t}})}
-
-function n$1(){return navigator.appVersion.includes("Win")}
-
-var q={};e(q,{BaseDirectory:()=>F$1,appCacheDir:()=>g,appConfigDir:()=>s,appDataDir:()=>c,appDir:()=>u,appLocalDataDir:()=>m,appLogDir:()=>n,audioDir:()=>d,basename:()=>V,cacheDir:()=>P,configDir:()=>h,dataDir:()=>l,delimiter:()=>z,desktopDir:()=>_,dirname:()=>F,documentDir:()=>p,downloadDir:()=>y,executableDir:()=>f,extname:()=>H,fontDir:()=>D,homeDir:()=>M,isAbsolute:()=>W,join:()=>E,localDataDir:()=>v,logDir:()=>w,normalize:()=>B,pictureDir:()=>b,publicDir:()=>A,resolve:()=>T,resolveResource:()=>x,resourceDir:()=>C,runtimeDir:()=>L,sep:()=>j,templateDir:()=>R,videoDir:()=>k});async function u(){return s()}async function s(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:21}})}async function c(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:22}})}async function m(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:23}})}async function g(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:24}})}async function d(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:1}})}async function P(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:2}})}async function h(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:3}})}async function l(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:4}})}async function _(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:6}})}async function p(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:7}})}async function y(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:8}})}async function f(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:9}})}async function D(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:10}})}async function M(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:11}})}async function v(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:5}})}async function b(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:12}})}async function A(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:13}})}async function C(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:17}})}async function x(t){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:t,directory:17}})}async function L(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:14}})}async function R(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:15}})}async function k(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:16}})}async function w(){return n()}async function n(){return a$1({__tauriModule:"Path",message:{cmd:"resolvePath",path:"",directory:25}})}var j=n$1()?"\\":"/",z=n$1()?";":":";async function T(...t){return a$1({__tauriModule:"Path",message:{cmd:"resolve",paths:t}})}async function B(t){return a$1({__tauriModule:"Path",message:{cmd:"normalize",path:t}})}async function E(...t){return a$1({__tauriModule:"Path",message:{cmd:"join",paths:t}})}async function F(t){return a$1({__tauriModule:"Path",message:{cmd:"dirname",path:t}})}async function H(t){return a$1({__tauriModule:"Path",message:{cmd:"extname",path:t}})}async function V(t,a){return a$1({__tauriModule:"Path",message:{cmd:"basename",path:t,ext:a}})}async function W(t){return a$1({__tauriModule:"Path",message:{cmd:"isAbsolute",path:t}})}
-
-function delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 const defaultInterval = 100;
 class KeyData {
     constructor(danmaku, keys) {
@@ -930,39 +971,6 @@ function keysToRegex(keys) {
     return new RegExp(keys.map((key) => `@(${key.danmaku})`).join('|'), 'ig');
 }
 
-const trashIcon = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 -256 1792 1792" id="svg3741" version="1.1" inkscape:version="0.48.3.1 r9886" width="100%" height="100%" sodipodi:docname="trash_font_awesome.svg">
-  <metadata id="metadata3751">
-    <rdf:RDF>
-      <cc:Work rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <defs id="defs3749"/>
-  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="640" inkscape:window-height="480" id="namedview3747" showgrid="false" inkscape:zoom="0.13169643" inkscape:cx="896" inkscape:cy="896" inkscape:window-x="0" inkscape:window-y="25" inkscape:window-maximized="0" inkscape:current-layer="svg3741"/>
-  <g transform="matrix(1,0,0,-1,197.42373,1255.0508)" id="g3743">
-    <path d="M 512,800 V 224 q 0,-14 -9,-23 -9,-9 -23,-9 h -64 q -14,0 -23,9 -9,9 -9,23 v 576 q 0,14 9,23 9,9 23,9 h 64 q 14,0 23,-9 9,-9 9,-23 z m 256,0 V 224 q 0,-14 -9,-23 -9,-9 -23,-9 h -64 q -14,0 -23,9 -9,9 -9,23 v 576 q 0,14 9,23 9,9 23,9 h 64 q 14,0 23,-9 9,-9 9,-23 z m 256,0 V 224 q 0,-14 -9,-23 -9,-9 -23,-9 h -64 q -14,0 -23,9 -9,9 -9,23 v 576 q 0,14 9,23 9,9 23,9 h 64 q 14,0 23,-9 9,-9 9,-23 z M 1152,76 v 948 H 256 V 76 Q 256,54 263,35.5 270,17 277.5,8.5 285,0 288,0 h 832 q 3,0 10.5,8.5 7.5,8.5 14.5,27 7,18.5 7,40.5 z M 480,1152 h 448 l -48,117 q -7,9 -17,11 H 546 q -10,-2 -17,-11 z m 928,-32 v -64 q 0,-14 -9,-23 -9,-9 -23,-9 h -96 V 76 q 0,-83 -47,-143.5 -47,-60.5 -113,-60.5 H 288 q -66,0 -113,58.5 Q 128,-11 128,72 v 952 H 32 q -14,0 -23,9 -9,9 -9,23 v 64 q 0,14 9,23 9,9 23,9 h 309 l 70,167 q 15,37 54,63 39,26 79,26 h 320 q 40,0 79,-26 39,-26 54,-63 l 70,-167 h 309 q 14,0 23,-9 9,-9 9,-23 z" id="path3745" inkscape:connector-curvature="0" style="fill:currentColor"/>
-  </g>
-</svg>`;
-const editIcon = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 -256 1850 1850" id="svg3025" version="1.1" inkscape:version="0.48.3.1 r9886" width="100%" height="100%" sodipodi:docname="edit_font_awesome.svg">
-  <metadata id="metadata3035">
-    <rdf:RDF>
-      <cc:Work rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <defs id="defs3033"/>
-  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="640" inkscape:window-height="480" id="namedview3031" showgrid="false" inkscape:zoom="0.13169643" inkscape:cx="896" inkscape:cy="896" inkscape:window-x="0" inkscape:window-y="25" inkscape:window-maximized="0" inkscape:current-layer="svg3025"/>
-  <g transform="matrix(1,0,0,-1,30.372881,1373.7966)" id="g3027">
-    <path d="M 888,352 1004,468 852,620 736,504 v -56 h 96 v -96 h 56 z m 440,720 q -16,16 -33,-1 L 945,721 q -17,-17 -1,-33 16,-16 33,1 l 350,350 q 17,17 1,33 z m 80,-594 V 288 Q 1408,169 1323.5,84.5 1239,0 1120,0 H 288 Q 169,0 84.5,84.5 0,169 0,288 v 832 Q 0,1239 84.5,1323.5 169,1408 288,1408 h 832 q 63,0 117,-25 15,-7 18,-23 3,-17 -9,-29 l -49,-49 q -14,-14 -32,-8 -23,6 -45,6 H 288 q -66,0 -113,-47 -47,-47 -47,-113 V 288 q 0,-66 47,-113 47,-47 113,-47 h 832 q 66,0 113,47 47,47 47,113 v 126 q 0,13 9,22 l 64,64 q 15,15 35,7 20,-8 20,-29 z M 1312,1216 1600,928 928,256 H 640 v 288 z m 444,-132 -92,-92 -288,288 92,92 q 28,28 68,28 40,0 68,-28 l 152,-152 q 28,-28 28,-68 0,-40 -28,-68 z" id="path3029" inkscape:connector-curvature="0" style="fill:currentColor"/>
-  </g>
-</svg>`;
-
 /* src/components/Input.svelte generated by Svelte v4.2.0 */
 
 function create_if_block_2(ctx) {
@@ -1055,7 +1063,7 @@ function create_if_block_1$1(ctx) {
 	};
 }
 
-// (57:6) {#if danmaku && danmaku.length > 0 && keys.length > 0}
+// (57:6) {#if danmaku && keys.length > 0}
 function create_if_block$2(ctx) {
 	let button;
 	let mounted;
@@ -1110,7 +1118,7 @@ function create_fragment$2(ctx) {
 
 	let current_block_type = select_block_type(ctx);
 	let if_block1 = current_block_type(ctx);
-	let if_block2 = /*danmaku*/ ctx[1] && /*danmaku*/ ctx[1].length > 0 && /*keys*/ ctx[2].length > 0 && create_if_block$2(ctx);
+	let if_block2 = /*danmaku*/ ctx[1] && /*keys*/ ctx[2].length > 0 && create_if_block$2(ctx);
 
 	return {
 		c() {
@@ -1198,7 +1206,7 @@ function create_fragment$2(ctx) {
 				}
 			}
 
-			if (/*danmaku*/ ctx[1] && /*danmaku*/ ctx[1].length > 0 && /*keys*/ ctx[2].length > 0) {
+			if (/*danmaku*/ ctx[1] && /*keys*/ ctx[2].length > 0) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 				} else {
@@ -1273,7 +1281,7 @@ function instance$2($$self, $$props, $$invalidate) {
 	const click_handler_1 = () => {
 		stopListen();
 
-		if (danmaku && danmaku.length > 0 && keys.length > 0) {
+		if (danmaku && keys.length > 0) {
 			dispatch('key', new KeyData(danmaku, keys));
 		}
 
@@ -1680,13 +1688,13 @@ class Key extends SvelteComponent {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[16] = list[i];
-	child_ctx[17] = list;
-	child_ctx[18] = i;
+	child_ctx[17] = list[i];
+	child_ctx[18] = list;
+	child_ctx[19] = i;
 	return child_ctx;
 }
 
-// (73:2) {#if config}
+// (75:2) {#if config}
 function create_if_block_1(ctx) {
 	let div1;
 	let div0;
@@ -1825,66 +1833,66 @@ function create_if_block_1(ctx) {
 	};
 }
 
-// (89:8) {#each config.keys as key, i}
+// (92:8) {#each config.keys as key, i}
 function create_each_block(ctx) {
-	let keydata;
+	let keycomponent;
 	let updating_key;
 	let current;
 
-	function keydata_key_binding(value) {
-		/*keydata_key_binding*/ ctx[10](value, /*key*/ ctx[16], /*each_value*/ ctx[17], /*i*/ ctx[18]);
+	function keycomponent_key_binding(value) {
+		/*keycomponent_key_binding*/ ctx[10](value, /*key*/ ctx[17], /*each_value*/ ctx[18], /*i*/ ctx[19]);
 	}
 
 	function delete_handler() {
-		return /*delete_handler*/ ctx[11](/*i*/ ctx[18]);
+		return /*delete_handler*/ ctx[11](/*i*/ ctx[19]);
 	}
 
-	let keydata_props = {};
+	let keycomponent_props = {};
 
-	if (/*key*/ ctx[16] !== void 0) {
-		keydata_props.key = /*key*/ ctx[16];
+	if (/*key*/ ctx[17] !== void 0) {
+		keycomponent_props.key = /*key*/ ctx[17];
 	}
 
-	keydata = new Key({ props: keydata_props });
-	binding_callbacks.push(() => bind(keydata, 'key', keydata_key_binding));
-	keydata.$on("delete", delete_handler);
+	keycomponent = new Key({ props: keycomponent_props });
+	binding_callbacks.push(() => bind(keycomponent, 'key', keycomponent_key_binding));
+	keycomponent.$on("delete", delete_handler);
 
 	return {
 		c() {
-			create_component(keydata.$$.fragment);
+			create_component(keycomponent.$$.fragment);
 		},
 		m(target, anchor) {
-			mount_component(keydata, target, anchor);
+			mount_component(keycomponent, target, anchor);
 			current = true;
 		},
 		p(new_ctx, dirty) {
 			ctx = new_ctx;
-			const keydata_changes = {};
+			const keycomponent_changes = {};
 
 			if (!updating_key && dirty & /*config*/ 1) {
 				updating_key = true;
-				keydata_changes.key = /*key*/ ctx[16];
+				keycomponent_changes.key = /*key*/ ctx[17];
 				add_flush_callback(() => updating_key = false);
 			}
 
-			keydata.$set(keydata_changes);
+			keycomponent.$set(keycomponent_changes);
 		},
 		i(local) {
 			if (current) return;
-			transition_in(keydata.$$.fragment, local);
+			transition_in(keycomponent.$$.fragment, local);
 			current = true;
 		},
 		o(local) {
-			transition_out(keydata.$$.fragment, local);
+			transition_out(keycomponent.$$.fragment, local);
 			current = false;
 		},
 		d(detaching) {
-			destroy_component(keydata, detaching);
+			destroy_component(keycomponent, detaching);
 		}
 	};
 }
 
-// (105:0) {#if openInput}
+// (110:0) {#if openInput}
 function create_if_block(ctx) {
 	let input;
 	let updating_isOpen;
@@ -1956,7 +1964,7 @@ function create_fragment(ctx) {
 		c() {
 			div1 = element("div");
 			div0 = element("div");
-			div0.textContent = "说明：弹幕前面需要加 @ 符号来触发";
+			div0.textContent = "说明：弹幕文字前面需要添加 @ 符号来触发";
 			t1 = space();
 			if (if_block0) if_block0.c();
 			t2 = space();
@@ -2099,9 +2107,10 @@ function instance($$self, $$props, $$invalidate) {
 	};
 
 	let { data } = $$props;
+	const session = data.session;
 	const enable = data.enable;
 	component_subscribe($$self, enable, value => $$invalidate(8, $enable = value));
-	const liverUID = data.data.liverUID;
+	const liverUID = session.liverUIDReadable;
 	component_subscribe($$self, liverUID, value => $$invalidate(7, $liverUID = value));
 	let config;
 	let regex;
@@ -2121,14 +2130,16 @@ function instance($$self, $$props, $$invalidate) {
 		$$invalidate(0, config);
 	}
 
-	function keydata_key_binding(value, key, each_value, i) {
+	function keycomponent_key_binding(value, key, each_value, i) {
 		each_value[i] = value;
 		$$invalidate(0, config);
 	}
 
 	const delete_handler = i => {
-		config?.keys.splice(i, 1);
-		$$invalidate(0, config);
+		if (config) {
+			config.keys.splice(i, 1);
+			$$invalidate(0, config);
+		}
 	};
 
 	const click_handler = () => $$invalidate(1, openInput = true);
@@ -2162,19 +2173,19 @@ function instance($$self, $$props, $$invalidate) {
 			}
 		}
 
-		if ($$self.$$.dirty & /*unsubscribe, $liverUID, data, $enable, regex, config*/ 497) {
+		if ($$self.$$.dirty & /*unsubscribe, $liverUID, $enable, regex, config*/ 481) {
 			{
 				if (unsubscribe) {
 					unsubscribe();
 					$$invalidate(6, unsubscribe = undefined);
 				}
 
-				if ($liverUID) {
-					$$invalidate(6, unsubscribe = data.session.on(
+				if ($liverUID !== undefined && $liverUID > 0) {
+					$$invalidate(6, unsubscribe = session.session.on(
 						'comment',
-						damaku => __awaiter(void 0, void 0, void 0, function* () {
+						comment => __awaiter(void 0, void 0, void 0, function* () {
 							if ($enable && regex) {
-								for (const match of damaku.data.content.matchAll(regex)) {
+								for (const match of comment.data.content.matchAll(regex)) {
 									for (const [i, group] of match.slice(1).entries()) {
 										if (group) {
 											const key = config === null || config === void 0
@@ -2215,7 +2226,7 @@ function instance($$self, $$props, $$invalidate) {
 		$liverUID,
 		$enable,
 		input_input_handler,
-		keydata_key_binding,
+		keycomponent_key_binding,
 		delete_handler,
 		click_handler,
 		input_isOpen_binding,

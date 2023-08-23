@@ -1,10 +1,7 @@
-import { type Input, simulate_input } from 'tauri-plugin-acfunlive-neotool-keyboard-api';
+import { delay } from '@acfunlive-neotool/shared';
 import { BaseDirectory, createDir, exists, readTextFile, writeTextFile } from '@tauri-apps/api/fs';
 import { join } from '@tauri-apps/api/path';
-
-function delay(ms: number): Promise<void> {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
+import { type Input, simulate_input } from 'tauri-plugin-acfunlive-neotool-keyboard-api';
 
 const defaultInterval = 100;
 

@@ -42,6 +42,16 @@ function canonicalize(path) {
         return yield invoke('plugin:acfunlive-neotool-base|canonicalize', { path });
     });
 }
+function hashFileSha256(path) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield invoke('plugin:acfunlive-neotool-base|hash_file_sha256', { path });
+    });
+}
+function symlinkDir(source, destination) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield invoke('plugin:acfunlive-neotool-base|symlink_dir', { source, destination });
+    });
+}
 
-export { canonicalize, loadAppsConfig };
+export { canonicalize, hashFileSha256, loadAppsConfig, symlinkDir };
 //# sourceMappingURL=index.mjs.map

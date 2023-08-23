@@ -21,6 +21,7 @@
     "@acfunlive-neotool/shared": "link:../../packages/shared",
     "@tauri-apps/api": "^1.4.0",
     "svelte": "^4.2.0",
+    "tauri-plugin-acfunlive-neotool-base-api": "link:../../plugins/base",
     "tauri-plugin-acfunlive-neotool-serve-files-api": "link:../../plugins/serve_files"
   },
   "devDependencies": {

@@ -10,22 +10,28 @@
     waitInterval,
     type KeyConfig
   } from './scripts/key';
-  import KeyData from './components/Key.svelte';
+  import KeyComponent from './components/Key.svelte';
   import Input from './components/Input.svelte';
 
   import './app.css';
 
   export let data: AppData;
 
+  const session = data.session;
+
   const enable = data.enable;
 
-  const liverUID = data.data.liverUID;
+  const liverUID = session.liverUIDReadable;
 
   let config: KeyConfig | undefined;
 
   let regex: RegExp | undefined;
 
   let openInput = false;
+
+  loadConfig()
+    .then((c) => (config = c))
+    .catch((e) => console.log(`failed to load danmaku_keyboard config: ${e}`));
 
   $: if (config) {
     saveConfig(config).catch((e) => console.log(`failed to save danmaku_keyboard config: ${e}`));
@@ -36,10 +42,6 @@
     }
   }
 
-  loadConfig()
-    .then((c) => (config = c))
-    .catch((e) => console.log(`failed to load danmaku_keyboard config: ${e}`));
-
   let unsubscribe: (() => void) | undefined;
 
   $: {
@@ -48,12 +50,12 @@
       unsubscribe = undefined;
     }
 
-    if ($liverUID) {
-      unsubscribe = data.session.on(
+    if ($liverUID !== undefined && $liverUID > 0) {
+      unsubscribe = session.session.on(
         'comment',
-        async (damaku) => {
+        async (comment) => {
           if ($enable && regex) {
-            for (const match of damaku.data.content.matchAll(regex)) {
+            for (const match of comment.data.content.matchAll(regex)) {
               for (const [i, group] of match.slice(1).entries()) {
                 if (group) {
                   const key = config?.keys[i];
@@ -87,12 +89,14 @@
 </script>
 
 <div class="flex flex-col content-between p-5 space-y-5">
-  <div>说明：弹幕前面需要加 @ 符号来触发</div>
+  <div>说明：弹幕文字前面需要添加 @ 符号来触发</div>
+
   {#if config}
     <div class="flex flex-row space-x-3">
       <div>单个弹幕连续触发按键的间隔时长（毫秒）</div>
       <input type="number" bind:value={config.interval} min="0" max="10000000" step="100" />
     </div>
+
     <table class="table table-zebra">
       <thead>
         <tr>
@@ -105,13 +109,15 @@
       </thead>
       <tbody>
         {#each config.keys as key, i}
-          <KeyData
+          <KeyComponent
             bind:key
             on:delete={() => {
-              config?.keys.splice(i, 1);
-              config = config;
+              if (config) {
+                config.keys.splice(i, 1);
+                config.keys = config.keys;
+              }
             }}
-          ></KeyData>
+          ></KeyComponent>
         {/each}
       </tbody>
     </table>
@@ -126,7 +132,7 @@
     on:key={(event) => {
       if (config) {
         config.keys.push(event.detail);
-        config = config;
+        config.keys = config.keys;
       }
     }}
   />

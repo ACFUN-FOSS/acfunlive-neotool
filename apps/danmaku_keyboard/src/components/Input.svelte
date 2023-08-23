@@ -67,12 +67,12 @@
           }}>开始输入</button
         >
       {/if}
-      {#if danmaku && danmaku.length > 0 && keys.length > 0}
+      {#if danmaku && keys.length > 0}
         <button
           class="btn"
           on:click={() => {
             stopListen();
-            if (danmaku && danmaku.length > 0 && keys.length > 0) {
+            if (danmaku && keys.length > 0) {
               dispatch('key', new KeyData(danmaku, keys));
             }
             isOpen = false;

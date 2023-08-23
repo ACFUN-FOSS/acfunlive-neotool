@@ -22,7 +22,7 @@ const fsOption = { dir: BaseDirectory.AppConfig };
 export async function loadConfig(): Promise<Config> {
   if (await exists(configFile, fsOption)) {
     const config: Config = JSON.parse(await readTextFile(configFile, fsOption));
-    if (config.liverUID !== undefined && config.liverUID <= 0) {
+    if ((config.liverUID !== undefined && config.liverUID <= 0) || config.liverUID === null) {
       config.liverUID = undefined;
     }
     config.appsDir = config.appsDir || defaultAppsDir;
