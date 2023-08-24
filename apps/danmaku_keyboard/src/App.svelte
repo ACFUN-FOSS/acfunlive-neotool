@@ -83,7 +83,6 @@
   onDestroy(() => {
     if (unsubscribe) {
       unsubscribe();
-      unsubscribe = undefined;
     }
   });
 </script>

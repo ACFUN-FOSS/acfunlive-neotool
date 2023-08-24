@@ -52,11 +52,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [
-        "apps/danmaku_keyboard/index.css",
-        "apps/danmaku_keyboard/index.js",
-        "apps/danmaku_keyboard/neotool.app.json"
-      ],
+      "resources": ["apps/*/index.css", "apps/*/index.js", "apps/*/neotool.app.json", "apps/*/web"],
       "targets": "all",
       "windows": {
         "certificateThumbprint": null,

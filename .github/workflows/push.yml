@@ -30,7 +30,9 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.0-dev build-essential curl wget file libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
       - name: install frontend dependencies
         run: pnpm install --recursive
-      - name: build the app
+      - name: build dependencies
+        run: pnpm build:deps
+      - name: build app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

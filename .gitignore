@@ -7,4 +7,10 @@ node_modules
 # tauri
 /target/
 
+# plugin
+/plugins/*/dist-js/
+
+# apps
+/apps/*/index.js
+/apps/*/index.css
 /apps/*/web

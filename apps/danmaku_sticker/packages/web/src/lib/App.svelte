@@ -114,7 +114,6 @@
   onDestroy(() => {
     if (commentUnsubscribe) {
       commentUnsubscribe();
-      commentUnsubscribe = undefined;
     }
     receiveUnsubscribe();
     cleanup();

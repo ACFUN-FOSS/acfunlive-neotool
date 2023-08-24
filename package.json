@@ -17,6 +17,7 @@
     "./plugins/*"
   ],
   "scripts": {
+    "build:deps": "node build_deps.js",
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write ."
   },
