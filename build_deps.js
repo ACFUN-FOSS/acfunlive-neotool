@@ -47,6 +47,7 @@ for (const dir of await subDirs('./apps')) {
   try {
     if ((await stat(web)).isDirectory()) {
       await build(web);
+      await build(web);
     }
   } catch (error) {
     if (error.code !== 'ENOENT') {

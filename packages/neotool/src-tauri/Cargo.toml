@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "neo toolbox for AcFun live"
 authors.workspace = true
 license.workspace = true
-repository = ""
+repository = "https://github.com/ACFUN-FOSS/acfunlive-neotool/tree/main/packages/neotool/src-tauri"
 default-run = "acfunlive-neotool"
 edition.workspace = true
 rust-version.workspace = true
@@ -15,7 +15,7 @@ tauri-build = { version = "1.4.0", features = [] }
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
-tauri = { version = "1.4.1", features = [ "dialog-open",
+tauri = { version = "1.5.2", features = [ "dialog-open",
   "devtools",
   "fs-all",
   "linux-protocol-headers",

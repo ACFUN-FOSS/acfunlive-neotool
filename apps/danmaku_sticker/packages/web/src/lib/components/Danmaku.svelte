@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { defaultDuration, Direction } from '@acfunlive-neotool/danmaku-sticker-shared';
+  import {
+    defaultHeight,
+    defaultDuration,
+    Direction
+  } from '@acfunlive-neotool/danmaku-sticker-shared';
   import { onDestroy } from 'svelte';
 
   import {
@@ -59,7 +63,7 @@
   <img
     src={sticker.data.pathInWeb}
     alt="图片"
-    style:max-height={`${sticker.data.height}px`}
+    style:max-height={`${sticker.data.height || defaultHeight}px`}
     style:width="auto"
   />
 </div>
