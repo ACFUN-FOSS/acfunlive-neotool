@@ -1,5 +1,3 @@
-export const neotoolID = 'neotool';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MessageType = Record<string, Record<string, any>>;
 

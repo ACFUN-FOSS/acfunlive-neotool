@@ -1,18 +1,16 @@
 <script lang="ts">
-  import type { AppData } from '@acfunlive-neotool/shared';
   import { onMount } from 'svelte';
   import type { AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
 
   import { loadApp } from '../scripts/load';
 
   export let config: AppConfig;
-  export let data: AppData;
 
   let element: Element | undefined;
 
   onMount(() => {
     if (element) {
-      loadApp(config.entry, element, data, config.css).catch((e) =>
+      loadApp(config.entry, element, config.css).catch((e) =>
         console.log(`failed to load App ${config.id} : ${e}`)
       );
     }

@@ -1,7 +1,7 @@
 {
-  "name": "@acfunlive-neotool/shared",
+  "name": "@acfunlive-neotool/event",
   "version": "0.1.0",
-  "description": "neo toolbox shared package",
+  "description": "neo toolbox event package",
   "keywords": [
     "svelte",
     "acfun",
@@ -12,9 +12,11 @@
   "type": "module",
   "main": "index.ts",
   "dependencies": {
-    "@acfunlive-neotool/event": "link:../event",
     "@acfunlive-neotool/session": "link:../session",
-    "@acfunlive-neotool/utils": "link:../utils"
+    "@acfunlive-neotool/utils": "link:../utils",
+    "@tauri-apps/api": "^1.5.1",
+    "acfunlive-backend-js": "github:ACFUN-FOSS/acfunlive-backend-js",
+    "tauri-plugin-acfunlive-neotool-base-api": "link:../../plugins/base"
   },
   "devDependencies": {
     "tslib": "^2.6.2",

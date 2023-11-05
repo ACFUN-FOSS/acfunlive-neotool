@@ -1,8 +1,14 @@
 <script lang="ts">
-  import { type UserInfo, SessionData, neotoolID } from '@acfunlive-neotool/shared';
+  import {
+    BackendSession,
+    EventHandler,
+    listen,
+    neotoolID,
+    type UnlistenFn,
+    type UserInfo
+  } from '@acfunlive-neotool/shared';
   import tauriSession from 'acfunlive-backend-js/tauri.js';
   import { onDestroy } from 'svelte';
-  import { writable, get, readonly, type Writable } from 'svelte/store';
   import type { AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
 
   import { type Config, loadConfig, saveConfig, loadApps } from './scripts/load';
@@ -15,6 +21,7 @@
 
   let openUIDDialog = false;
 
+  // 读取设置
   loadConfig()
     .then((conf) => {
       config = conf;
@@ -22,29 +29,45 @@
     })
     .catch((e) => console.log(`failed to load config: ${e}`));
 
+  // 设置发生变化时保存设置
   $: config && saveConfig(config).catch((e) => console.log(`failed to save config: ${e}`));
 
-  type AppConfigData = {
-    config: AppConfig;
-    enable: Writable<boolean>;
-  };
-
-  let appsConfig: AppConfigData[] | undefined;
+  let appsConfig: AppConfig[] | undefined;
 
   let selectedApp = 0;
 
+  const session = new BackendSession(tauriSession(), neotoolID);
+
+  let eventHandler: EventHandler | undefined;
+
+  // 读取App设置
   $: if (config?.appsDir && !appsConfig) {
     loadApps(config.appsDir)
-      .then(
-        (configs) =>
-          (appsConfig = configs.map((config) => {
-            return { config, enable: writable(true) };
-          }))
-      )
+      .then((configs) => {
+        appsConfig = configs;
+        eventHandler = new EventHandler(
+          session,
+          configs,
+          configs.map((config) => {
+            return { id: config.id, enable: true };
+          })
+        );
+      })
       .catch((e) => console.log(`failed to load Apps config: ${e}`));
   }
 
-  const session = new SessionData(tauriSession(), neotoolID);
+  let isEventHandlerInited = eventHandler?.isInited ?? false;
+  $: if (eventHandler && !isEventHandlerInited) {
+    eventHandler
+      .init()
+      .then(() => (isEventHandlerInited = true))
+      .catch((e) => console.log(`falied to init event handler: ${e}`));
+  }
+
+  let errorUnlisten: UnlistenFn | undefined;
+  listen('error', (e) => console.log(`event error: ${e}`), undefined)
+    .then((unlisten) => (errorUnlisten = unlisten))
+    .catch((e) => console.log(`failed to listen event error: ${e}`));
 
   const state = session.stateReadable;
 
@@ -77,13 +100,20 @@
   $: if (
     config?.liverUID !== undefined &&
     config.liverUID > 0 &&
-    $state.isConnect() &&
+    $state.isConnecting() &&
     $state.isLogin()
   ) {
-    session.getDanmakuCyclically(config?.liverUID);
+    session.getDanmakuRepeatedly(config?.liverUID);
   }
 
-  onDestroy(cleanup);
+  onDestroy(() => {
+    if (errorUnlisten) {
+      errorUnlisten();
+      errorUnlisten = undefined;
+    }
+    eventHandler?.cleanup();
+    cleanup();
+  });
 </script>
 
 <div class="flex flex-row justify-between items-center h-16 mx-5">
@@ -97,22 +127,23 @@
 </div>
 <div class="divider h-0 my-0"></div>
 
-{#if appsConfig && appsConfig.length > 0}
+{#if appsConfig && appsConfig.length > 0 && eventHandler && isEventHandlerInited}
   <div class="drawer drawer-open">
     <input type="checkbox" class="drawer-toggle" />
     <div class="drawer-side">
       <ul class="menu space-y-2">
-        {#each appsConfig as appConfig, i (appConfig.config.id)}
+        {#each appsConfig as appConfig, i (appConfig.id)}
           <li>
             <div class="flex flex-row" class:active={selectedApp === i}>
               <button class="btn btn-ghost" on:click={() => (selectedApp = i)}
-                >{appConfig.config.name}</button
+                >{appConfig.name}</button
               >
               <input
                 type="checkbox"
                 class="toggle toggle-sm"
-                checked={get(appConfig.enable)}
-                on:change={(e) => appConfig.enable.update(() => e.currentTarget.checked)}
+                checked={eventHandler.appEnabled(appConfig.id)?.enable}
+                on:change={(e) =>
+                  eventHandler?.setAppEnabled(appConfig.id, e.currentTarget.checked)}
               />
             </div>
           </li>
@@ -120,16 +151,9 @@
       </ul>
     </div>
     <div class="drawer-content">
-      {#each appsConfig as appConfig, i (appConfig.config.id)}
+      {#each appsConfig as appConfig, i (appConfig.id)}
         <div class:hidden={selectedApp !== i}>
-          <SubApp
-            config={appConfig.config}
-            data={{
-              session: session,
-              config: appConfig.config,
-              enable: readonly(appConfig.enable)
-            }}
-          ></SubApp>
+          <SubApp config={appConfig}></SubApp>
         </div>
       {/each}
     </div>
@@ -145,7 +169,7 @@
         if (config.liverUID) {
           if (config.liverUID !== uid.detail) {
             // 停止获取旧的弹幕后会重新获取新的弹幕
-            session.stopDanmakuCyclically(config.liverUID);
+            session.stopDanmakuRepeatedly(config.liverUID);
             config.liverUID = uid.detail;
           }
         } else {

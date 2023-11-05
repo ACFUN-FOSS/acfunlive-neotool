@@ -8,35 +8,73 @@
     type StickerMessage,
     type StickerConfig
   } from '@acfunlive-neotool/danmaku-sticker-shared';
-  import { type AppData, delay, webDirName } from '@acfunlive-neotool/shared';
+  import {
+    delay,
+    listen,
+    receiveMessage,
+    request,
+    sendMessage,
+    SessionState,
+    UnlistenFn,
+    webDirName
+  } from '@acfunlive-neotool/shared';
   import { join } from '@tauri-apps/api/path';
   import { onDestroy } from 'svelte';
+  import type { AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
   import { Server } from 'tauri-plugin-acfunlive-neotool-serve-files-api';
 
   import './app.css';
+  import appConfigJson from '../neotool.app.json';
   import { loadConfig, saveConfig, saveImage, getPathInWeb, symlinkDataDir } from './scripts/data';
   import Sticker from './components/Sticker.svelte';
   import Pick from './components/Pick.svelte';
 
-  export let data: AppData;
+  let cleanups: UnlistenFn[] = [];
 
-  const session = data.session;
+  let appConfig: AppConfig | undefined;
+  listen('appConfig', (config) => (appConfig = config), appConfigJson.id)
+    .then(async (unlisten) => {
+      cleanups.push(unlisten);
+      await request('appConfig', appConfigJson.id);
+    })
+    .catch((e) => console.log(`failed to listen appConfig: ${e}`));
 
-  const state = session.stateReadable;
+  let enable = false;
+  listen('appEnabled', (enabled) => (enable = enabled.enable), appConfigJson.id)
+    .then(async (unlisten) => {
+      cleanups.push(unlisten);
+      await request('appEnabled', appConfigJson.id);
+    })
+    .catch((e) => console.log(`failed to listen appEnabled: ${e}`));
 
-  const liverUID = session.liverUIDReadable;
+  let state = new SessionState();
+  listen('backendState', (s) => (state = s), undefined)
+    .then(async (unlisten) => {
+      cleanups.push(unlisten);
+      await request('backendState', undefined);
+    })
+    .catch((e) => console.log(`failed to listen backend state: ${e}`));
 
-  const enable = data.enable;
+  let liverUID: number | undefined;
+  listen('liverUID', (uid) => (liverUID = uid), undefined)
+    .then(async (unlisten) => {
+      cleanups.push(unlisten);
+      await request('liverUID', undefined);
+    })
+    .catch((e) => console.log(`failed to listen liverUID: ${e}`));
 
-  join(data.config.path, webDirName).then((path) =>
-    symlinkDataDir(path)
-      .catch((e) => console.log(`failed to create symlink to data directory: ${e}`))
-      .finally(() =>
-        Server.startServe(path, hostname, port).catch((e) =>
-          console.log(`failed to start the server: ${e}`)
+  let server: Server | undefined;
+  $: if (appConfig && server === undefined) {
+    join(appConfig.path, webDirName).then((path) =>
+      symlinkDataDir(path)
+        .catch((e) => console.log(`failed to create symlink to data directory: ${e}`))
+        .finally(() =>
+          Server.startServe(path, hostname, port)
+            .then((s) => (server = s))
+            .catch((e) => console.log(`failed to start the server: ${e}`))
         )
-      )
-  );
+    );
+  }
 
   let config: StickerConfig | undefined;
 
@@ -48,70 +86,73 @@
     saveConfig(config).catch((e) => console.log(`failed to save danmaku_sticker config: ${e}`));
   }
 
-  $: if ($state.isLogin() && config && $liverUID !== undefined && $liverUID > 0) {
-    session.sendMessageCyclically(danmakuStickerWebID, {
+  $: if (state.hasClientId() && config && liverUID !== undefined && liverUID > 0) {
+    sendMessage<StickerMessage>(danmakuStickerWebID, {
       target: danmakuStickerWebID,
       type: 'update',
       data: {
-        liverUID: $liverUID,
+        liverUID,
         config
       }
-    });
+    }).catch((e) => console.log(`failed to send message: ${e}`));
   }
 
   let openPick = false;
 
-  $: if ($state.isLogin()) {
-    if ($enable) {
-      session.sendMessageCyclically(danmakuStickerWebID, {
+  $: if (state.hasClientId()) {
+    if (enable) {
+      sendMessage<StickerMessage>(danmakuStickerWebID, {
         target: danmakuStickerWebID,
         type: 'online',
         data: undefined
-      });
+      }).catch((e) => console.log(`failed to send message: ${e}`));
     } else {
-      session.sendMessageCyclically(danmakuStickerWebID, {
+      sendMessage<StickerMessage>(danmakuStickerWebID, {
         target: danmakuStickerWebID,
         type: 'offline',
         data: undefined
-      });
+      }).catch((e) => console.log(`failed to send message: ${e}`));
     }
   }
 
   let isSendingUpdate = false;
+  receiveMessage<StickerMessage>(danmakuStickerID, async (message) => {
+    if (message.type === 'isOnline') {
+      if (isSendingUpdate) {
+        return;
+      } else {
+        isSendingUpdate = true;
 
-  const receiveUnsubscribe = session.onReceiveMessage<StickerMessage>(
-    danmakuStickerID,
-    async (message) => {
-      if (message.type === 'isOnline') {
-        if (isSendingUpdate) {
-          return;
-        } else {
-          isSendingUpdate = true;
+        while (isSendingUpdate) {
+          if (state.hasClientId() && config && liverUID !== undefined && liverUID > 0) {
+            await sendMessage<StickerMessage>(danmakuStickerWebID, {
+              target: danmakuStickerWebID,
+              type: 'update',
+              data: {
+                liverUID,
+                config
+              }
+            }).catch((e) => console.log(`failed to send message: ${e}`));
 
-          while (isSendingUpdate) {
-            if ($state.isConnect() && config && $liverUID !== undefined && $liverUID > 0) {
-              await session.sendMessageCyclically(danmakuStickerWebID, {
-                target: danmakuStickerWebID,
-                type: 'update',
-                data: {
-                  liverUID: $liverUID,
-                  config
-                }
-              });
-
-              break;
-            } else {
-              await delay(2000);
-            }
+            break;
+          } else {
+            await delay(2000);
           }
-
-          isSendingUpdate = false;
         }
+
+        isSendingUpdate = false;
       }
     }
-  );
+  })
+    .then((unlisten) => cleanups.push(unlisten))
+    .catch((e) => console.log(`failed to receive message: ${e}`));
 
-  onDestroy(receiveUnsubscribe);
+  onDestroy(() => {
+    for (const cleanup of cleanups) {
+      cleanup();
+    }
+    cleanups = [];
+  });
 </script>
 
 <div class="flex flex-col content-between p-5 space-y-5">

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AppData } from '@acfunlive-neotool/shared';
+  import { listen, request, type UnlistenFn } from '@acfunlive-neotool/shared';
   import { onDestroy } from 'svelte';
 
   import {
@@ -14,14 +14,25 @@
   import Input from './components/Input.svelte';
 
   import './app.css';
+  import appConfigJson from '../neotool.app.json';
 
-  export let data: AppData;
+  let cleanups: UnlistenFn[] = [];
 
-  const session = data.session;
+  let enable = false;
+  listen('appEnabled', (enabled) => (enable = enabled.enable), appConfigJson.id)
+    .then(async (unlisten) => {
+      cleanups.push(unlisten);
+      await request('appEnabled', appConfigJson.id);
+    })
+    .catch((e) => console.log(`failed to listen appEnabled: ${e}`));
 
-  const enable = data.enable;
-
-  const liverUID = session.liverUIDReadable;
+  let liverUID: number | undefined;
+  listen('liverUID', (uid) => (liverUID = uid), undefined)
+    .then(async (unlisten) => {
+      cleanups.push(unlisten);
+      await request('liverUID', undefined);
+    })
+    .catch((e) => console.log(`failed to listen liverUID: ${e}`));
 
   let config: KeyConfig | undefined;
 
@@ -42,48 +53,40 @@
     }
   }
 
-  let unsubscribe: (() => void) | undefined;
-
-  $: {
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = undefined;
-    }
-
-    if ($liverUID !== undefined && $liverUID > 0) {
-      unsubscribe = session.session.on(
-        'comment',
-        async (comment) => {
-          if ($enable && regex) {
-            for (const match of comment.data.content.matchAll(regex)) {
-              for (const [i, group] of match.slice(1).entries()) {
-                if (group) {
-                  const key = config?.keys[i];
-                  if (key?.enable) {
-                    try {
-                      await simulate(key);
-                    } catch (e) {
-                      console.log(`failed to simulate keyboard input: ${e}`);
-                    }
-
-                    break;
-                  }
+  listen(
+    'danmaku',
+    async (danmaku) => {
+      if (enable && regex && danmaku.liverUID === liverUID) {
+        for (const match of danmaku.data.content.matchAll(regex)) {
+          for (const [i, group] of match.slice(1).entries()) {
+            if (group) {
+              const key = config?.keys[i];
+              if (key?.enable) {
+                try {
+                  await simulate(key);
+                } catch (e) {
+                  console.log(`failed to simulate keyboard input: ${e}`);
                 }
-              }
 
-              await waitInterval(config);
+                break;
+              }
             }
           }
-        },
-        $liverUID
-      );
-    }
-  }
+
+          await waitInterval(config);
+        }
+      }
+    },
+    undefined
+  )
+    .then((unlisten) => cleanups.push(unlisten))
+    .catch((e) => console.log(`failed to listen danmaku: ${e}`));
 
   onDestroy(() => {
-    if (unsubscribe) {
-      unsubscribe();
+    for (const cleanup of cleanups) {
+      cleanup();
     }
+    cleanups = [];
   });
 </script>
 

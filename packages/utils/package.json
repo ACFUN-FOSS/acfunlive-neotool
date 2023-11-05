@@ -1,8 +1,9 @@
 {
-  "name": "@acfunlive-neotool/danmaku-sticker-shared",
+  "name": "@acfunlive-neotool/utils",
   "version": "0.1.0",
-  "description": "danmaku sticker for AcFun live (shared package)",
+  "description": "neo toolbox utils package",
   "keywords": [
+    "svelte",
     "acfun",
     "acfunlive"
   ],

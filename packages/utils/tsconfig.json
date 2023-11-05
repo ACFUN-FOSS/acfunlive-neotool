@@ -3,5 +3,6 @@
     "module": "nodenext",
     "moduleResolution": "nodenext"
   },
-  "extends": "../../../../tsconfig.base.json"
+  "extends": "../../tsconfig.base.json",
+  "include": ["src"]
 }

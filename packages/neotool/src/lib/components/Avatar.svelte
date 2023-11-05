@@ -13,7 +13,7 @@
   let stateClass = '';
   let stateText = '';
 
-  $: if (!state.isConnect()) {
+  $: if (!state.isConnecting()) {
     stateClass = 'badge-error';
     stateText = '未连接后端';
   } else if (!state.isLogin()) {

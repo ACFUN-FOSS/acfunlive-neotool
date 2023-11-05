@@ -1,5 +1,6 @@
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import json from '@rollup/plugin-json';
 import svelte from 'rollup-plugin-svelte';
 import typescript from 'rollup-plugin-typescript2';
 import scss from 'rollup-plugin-scss';
@@ -16,6 +17,7 @@ export default {
   input: pkg.svelte,
   output: { file: pkg.main, format: 'es', assetFileNames: '[name][extname]' },
   plugins: [
+    json(),
     svelte({
       preprocess: sveltePreprocess({
         postcss: {

@@ -1,4 +1,3 @@
-import type { AppData } from '@acfunlive-neotool/shared';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { BaseDirectory, createDir, exists, readTextFile, writeTextFile } from '@tauri-apps/api/fs';
 import { join } from '@tauri-apps/api/path';
@@ -41,12 +40,7 @@ export async function saveConfig(config: Config): Promise<void> {
   await writeTextFile(configFile, JSON.stringify(config, null, 2), fsOption);
 }
 
-export async function loadApp(
-  jsPath: string,
-  target: Element,
-  data: AppData,
-  cssPath?: string
-): Promise<void> {
+export async function loadApp(jsPath: string, target: Element, cssPath?: string): Promise<void> {
   if (cssPath) {
     if (import.meta.env?.DEV) {
       await import(/* @vite-ignore */ cssPath);
@@ -63,8 +57,7 @@ export async function loadApp(
   const component = module.default;
 
   new component({
-    target: target,
-    props: { data }
+    target: target
   });
 }
 

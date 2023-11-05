@@ -6,14 +6,14 @@
     type StickerMessage,
     type StickerConfig
   } from '@acfunlive-neotool/danmaku-sticker-shared';
-  import { SessionData, neotoolID } from '@acfunlive-neotool/shared';
+  import { BackendSession, neotoolID } from '@acfunlive-neotool/session';
   import webApiSession from 'acfunlive-backend-js/webapi.js';
   import { onDestroy } from 'svelte';
 
   import Danmaku from './components/Danmaku.svelte';
   import { stickersToRegex, gap, type Sticker } from './scripts/danmaku';
 
-  const session = new SessionData(webApiSession(), danmakuStickerWebID);
+  const session = new BackendSession(webApiSession(), danmakuStickerWebID);
 
   const state = session.stateReadable;
 
@@ -34,7 +34,7 @@
   let regex: RegExp | undefined;
 
   $: if ($state.isLogin() && isOnline) {
-    session.sendMessageCyclically<StickerMessage>(neotoolID, {
+    session.sendMessageRepeatedly<StickerMessage>(neotoolID, {
       target: danmakuStickerID,
       type: 'isOnline',
       data: undefined
@@ -46,53 +46,38 @@
   }
 
   $: if (liverUID !== undefined && liverUID > 0) {
-    session.getDanmakuCyclically(liverUID);
+    session.getDanmakuRepeatedly(liverUID);
   }
 
-  let commentUnsubscribe: (() => void) | undefined;
+  const commentUnsubscribe = session.session.on('comment', (comment) => {
+    if (isOnline && regex && comment.liverUID === liverUID) {
+      for (const match of comment.data.content.matchAll(regex)) {
+        for (const [i, group] of match.slice(1).entries()) {
+          if (group) {
+            const sticker = config?.stickers[i];
+            if (sticker?.enable) {
+              const newId = id++;
+              data.push({ id: newId, data: sticker });
+              data = data;
 
-  $: {
-    if (commentUnsubscribe) {
-      commentUnsubscribe();
-      commentUnsubscribe = undefined;
-    }
-
-    if (liverUID !== undefined && liverUID > 0) {
-      commentUnsubscribe = session.session.on(
-        'comment',
-        (comment) => {
-          if (isOnline && regex) {
-            for (const match of comment.data.content.matchAll(regex)) {
-              for (const [i, group] of match.slice(1).entries()) {
-                if (group) {
-                  const sticker = config?.stickers[i];
-                  if (sticker?.enable) {
-                    const newId = id++;
-                    data.push({ id: newId, data: sticker });
+              setTimeout(
+                () => {
+                  const index = data.findIndex((s) => s.id === newId);
+                  if (index >= 0) {
+                    data.splice(index, 1);
                     data = data;
-
-                    setTimeout(
-                      () => {
-                        const index = data.findIndex((s) => s.id === newId);
-                        if (index >= 0) {
-                          data.splice(index, 1);
-                          data = data;
-                        }
-                      },
-                      (sticker.duration || defaultDuration) + gap
-                    );
-
-                    return;
                   }
-                }
-              }
+                },
+                (sticker.duration || defaultDuration) + gap
+              );
+
+              return;
             }
           }
-        },
-        liverUID
-      );
+        }
+      }
     }
-  }
+  });
 
   const receiveUnsubscribe = session.onReceiveMessage<StickerMessage>(
     danmakuStickerWebID,
@@ -103,7 +88,7 @@
         isOnline = false;
       } else if (message.type === 'update') {
         if (liverUID !== undefined && liverUID > 0 && liverUID !== message.data.liverUID) {
-          session.stopDanmakuCyclically(liverUID);
+          session.stopDanmakuRepeatedly(liverUID);
         }
         liverUID = message.data.liverUID;
         config = message.data.config;
@@ -112,9 +97,7 @@
   );
 
   onDestroy(() => {
-    if (commentUnsubscribe) {
-      commentUnsubscribe();
-    }
+    commentUnsubscribe();
     receiveUnsubscribe();
     cleanup();
   });

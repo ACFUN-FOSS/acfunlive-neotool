@@ -1,8 +1,9 @@
 {
-  "name": "@acfunlive-neotool/danmaku-sticker-shared",
+  "name": "@acfunlive-neotool/session",
   "version": "0.1.0",
-  "description": "danmaku sticker for AcFun live (shared package)",
+  "description": "neo toolbox session package",
   "keywords": [
+    "svelte",
     "acfun",
     "acfunlive"
   ],
@@ -10,6 +11,11 @@
   "author": "orzogc",
   "type": "module",
   "main": "index.ts",
+  "dependencies": {
+    "@acfunlive-neotool/utils": "link:../utils",
+    "acfunlive-backend-js": "github:ACFUN-FOSS/acfunlive-backend-js",
+    "svelte": "^4.2.2"
+  },
   "devDependencies": {
     "tslib": "^2.6.2",
     "typescript": "^5.2.2"
