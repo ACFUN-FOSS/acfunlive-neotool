@@ -240,6 +240,12 @@ importers:
       acfunlive-backend-js:
         specifier: github:ACFUN-FOSS/acfunlive-backend-js
         version: github.com/ACFUN-FOSS/acfunlive-backend-js/b4a8499492298a7b00be95e82686c24d19f5ea07(rescript@11.0.0-rc.5)(tauri-plugin-websocket-api@0.0.0)
+      carbon-components-svelte:
+        specifier: ^0.81.2
+        version: 0.81.2
+      carbon-icons-svelte:
+        specifier: ^12.3.0
+        version: 12.3.0
       svelte:
         specifier: ^4.2.2
         version: 4.2.2
@@ -262,9 +268,6 @@ importers:
       autoprefixer:
         specifier: ^10.4.16
         version: 10.4.16(postcss@8.4.31)
-      daisyui:
-        specifier: ^3.9.4
-        version: 3.9.4
       postcss:
         specifier: ^8.4.31
         version: 8.4.31
@@ -1400,6 +1403,16 @@ packages:
     resolution: {integrity: sha512-NTt0DNoKe958Q0BE0j0c1V9jbUzhBxHIEJy7asmGrpE0yG63KTV7PLHPnK2E1O9RsQrQ081I3NLuXGS6zht3cw==}
     dev: true
 
+  /carbon-components-svelte@0.81.2:
+    resolution: {integrity: sha512-VEyCQLrkrGWUSxVcrRuQN+2NJsdhtbf6aGUO4Z/iVhB2etmn0eF3qYlL/khNzfVevj++nQnIMAdAGMaDC1+/4g==}
+    dependencies:
+      flatpickr: 4.6.9
+    dev: false
+
+  /carbon-icons-svelte@12.3.0:
+    resolution: {integrity: sha512-RZI1nJEjnpgBka4A6zwEkNNqYfV9H7WjcyQ4JYPLoMO8a7N7mAVbaG9ngHUEahxf/byaHBp+EJD3Natf1dkylQ==}
+    dev: false
+
   /chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
@@ -1838,6 +1851,10 @@ packages:
       keyv: 4.5.4
       rimraf: 3.0.2
     dev: true
+
+  /flatpickr@4.6.9:
+    resolution: {integrity: sha512-F0azNNi8foVWKSF+8X+ZJzz8r9sE1G4hl06RyceIaLvyltKvDl6vqk9Lm/6AUUCi5HWaIjiUbk7UpeE/fOXOpw==}
+    dev: false
 
   /flatted@3.2.9:
     resolution: {integrity: sha512-36yxDn5H7OFZQla0/jFJmbIKTdZAQHngCedGxiMmpNfEZM0sdEeT+WczLQrjK6D7o2aiyLYDnkw0R3JK0Qv1RQ==}

@@ -154,76 +154,80 @@ export class BackendSession {
    * @returns 进行清理和断开和后端连接的函数
    */
   connect(): () => void {
-    this.session.connect();
-    const openUnsubscribe = this.session.on('websocketOpen', () => {
-      this.#id += 1;
-      this.#state.update((state) => state.connect());
-      this.setClientIdRepeatedly();
-      this.loginRepeatedly();
-    });
-    const closeUnsubscribe = this.session.on('websocketClose', () => {
-      // 断开会自动重连
-      this.#state.update((state) => state.disconnect());
-      this.#streamInfoMap.set(new Map());
-    });
-    const errorUnsubscribe = this.session.on('websocketError', () => {
-      // 出现错误会断开重连
-      this.#state.update((state) => state.disconnect());
-      this.#streamInfoMap.set(new Map());
-    });
-    const loginUnsubscribe = this.session.on('login', () => {
-      for (const liverUID of this.getDanmakuRepeatedlySet) {
-        if (!this.isGettingDanmaku(liverUID)) {
-          this.toGetDanmakuRepeatedly(liverUID);
+    if (!this.state.isConnecting() && !this.session.isConnecting()) {
+      this.session.connect();
+      const openUnsubscribe = this.session.on('websocketOpen', () => {
+        this.#id += 1;
+        this.#state.update((state) => state.connect());
+        this.setClientIdRepeatedly();
+        this.loginRepeatedly();
+      });
+      const closeUnsubscribe = this.session.on('websocketClose', () => {
+        // 断开会自动重连
+        this.#state.update((state) => state.disconnect());
+        this.#streamInfoMap.set(new Map());
+      });
+      const errorUnsubscribe = this.session.on('websocketError', () => {
+        // 出现错误会断开重连
+        this.#state.update((state) => state.disconnect());
+        this.#streamInfoMap.set(new Map());
+      });
+      const loginUnsubscribe = this.session.on('login', () => {
+        for (const liverUID of this.getDanmakuRepeatedlySet) {
+          if (!this.isGettingDanmaku(liverUID)) {
+            this.toGetDanmakuRepeatedly(liverUID);
+          }
         }
-      }
-    });
-    const setTokenUnsubscribe = this.session.on('setToken', () => {
-      for (const liverUID of this.getDanmakuRepeatedlySet) {
-        if (!this.isGettingDanmaku(liverUID)) {
-          this.toGetDanmakuRepeatedly(liverUID);
+      });
+      const setTokenUnsubscribe = this.session.on('setToken', () => {
+        for (const liverUID of this.getDanmakuRepeatedlySet) {
+          if (!this.isGettingDanmaku(liverUID)) {
+            this.toGetDanmakuRepeatedly(liverUID);
+          }
         }
-      }
-    });
-    const danmakuStopUnsubscribe = this.session.on('danmakuStop', (danmaku) => {
-      if (this.session.isConnecting()) {
-        this.#streamInfoMap.update((map) => {
-          map.delete(danmaku.liverUID);
+      });
+      const danmakuStopUnsubscribe = this.session.on('danmakuStop', (danmaku) => {
+        if (this.session.isConnecting()) {
+          this.#streamInfoMap.update((map) => {
+            map.delete(danmaku.liverUID);
 
-          return map;
-        });
-        if (this.isGettingDanmakuRepeatedly(danmaku.liverUID)) {
-          this.toGetDanmakuRepeatedly(danmaku.liverUID);
+            return map;
+          });
+          if (this.isGettingDanmakuRepeatedly(danmaku.liverUID)) {
+            this.toGetDanmakuRepeatedly(danmaku.liverUID);
+          }
         }
-      }
-    });
-    const danmakuStopErrorUnsubscribe = this.session.on('danmakuStopError', (danmaku) => {
-      if (this.session.isConnecting()) {
-        this.#streamInfoMap.update((map) => {
-          map.delete(danmaku.liverUID);
+      });
+      const danmakuStopErrorUnsubscribe = this.session.on('danmakuStopError', (danmaku) => {
+        if (this.session.isConnecting()) {
+          this.#streamInfoMap.update((map) => {
+            map.delete(danmaku.liverUID);
 
-          return map;
-        });
-        if (this.isGettingDanmakuRepeatedly(danmaku.liverUID)) {
-          this.toGetDanmakuRepeatedly(danmaku.liverUID);
+            return map;
+          });
+          if (this.isGettingDanmakuRepeatedly(danmaku.liverUID)) {
+            this.toGetDanmakuRepeatedly(danmaku.liverUID);
+          }
         }
-      }
-    });
+      });
 
-    return () => {
-      this.#state.update((state) => state.disconnect());
-      this.#token.set(undefined);
-      this.#streamInfoMap.set(new Map());
-      this.#getDanmakuRepeatedlySet.set(new Set());
-      openUnsubscribe();
-      closeUnsubscribe();
-      errorUnsubscribe();
-      loginUnsubscribe();
-      setTokenUnsubscribe();
-      danmakuStopUnsubscribe();
-      danmakuStopErrorUnsubscribe();
-      this.session.disConnect();
-    };
+      return () => {
+        this.#token.set(undefined);
+        this.#streamInfoMap.set(new Map());
+        this.#getDanmakuRepeatedlySet.set(new Set());
+        openUnsubscribe();
+        closeUnsubscribe();
+        errorUnsubscribe();
+        loginUnsubscribe();
+        setTokenUnsubscribe();
+        danmakuStopUnsubscribe();
+        danmakuStopErrorUnsubscribe();
+        this.session.disConnect();
+        this.#state.update((state) => state.disconnect());
+      };
+    } else {
+      return () => {};
+    }
   }
 
   private notifyError(error: unknown): void {

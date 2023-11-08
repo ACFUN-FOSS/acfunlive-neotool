@@ -19,12 +19,12 @@
   let cleanups: UnlistenFn[] = [];
 
   let enable = false;
-  listen('appEnabled', (enabled) => (enable = enabled.enable), appConfigJson.id)
+  listen('appData', (data) => (enable = data.enable), appConfigJson.id)
     .then(async (unlisten) => {
       cleanups.push(unlisten);
-      await request('appEnabled', appConfigJson.id);
+      await request('appData', appConfigJson.id);
     })
-    .catch((e) => console.log(`failed to listen appEnabled: ${e}`));
+    .catch((e) => console.log(`failed to listen appData: ${e}`));
 
   let liverUID: number | undefined;
   listen('liverUID', (uid) => (liverUID = uid), undefined)

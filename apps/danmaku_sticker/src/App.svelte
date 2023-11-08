@@ -40,12 +40,12 @@
     .catch((e) => console.log(`failed to listen appConfig: ${e}`));
 
   let enable = false;
-  listen('appEnabled', (enabled) => (enable = enabled.enable), appConfigJson.id)
+  listen('appData', (data) => (enable = data.enable), appConfigJson.id)
     .then(async (unlisten) => {
       cleanups.push(unlisten);
-      await request('appEnabled', appConfigJson.id);
+      await request('appData', appConfigJson.id);
     })
-    .catch((e) => console.log(`failed to listen appEnabled: ${e}`));
+    .catch((e) => console.log(`failed to listen appData: ${e}`));
 
   let state = new SessionState();
   listen('backendState', (s) => (state = s), undefined)

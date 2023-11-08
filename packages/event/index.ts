@@ -13,7 +13,7 @@ import { AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
 
 export type { UnlistenFn } from '@tauri-apps/api/event';
 
-export type AppEnabled = {
+export type AppData = {
   id: string;
   enable: boolean;
 };
@@ -28,7 +28,7 @@ export type ErrorEvent = error | string | unknown;
 /** 第一个是触发条件，第二个是事件数据，第三个是请求数据 */
 export type Events = {
   appConfig: [string, AppConfig, string];
-  appEnabled: [string, AppEnabled, string];
+  appData: [string, AppData, string];
   // TODO: 错误记录和通知
   error: [undefined, ErrorEvent, never];
   connectBackend: [undefined, undefined, never];
@@ -63,8 +63,8 @@ export async function listen<E extends keyof Events>(
         }
       });
       break;
-    case 'appEnabled':
-      unlisten = await TauriEvent.listen<AppEnabled>(event, (e) => {
+    case 'appData':
+      unlisten = await TauriEvent.listen<AppData>(event, (e) => {
         if (e.payload.id === filter) {
           callback(e.payload);
         }
@@ -79,7 +79,9 @@ export async function listen<E extends keyof Events>(
       unlisten = await TauriEvent.listen(event, (e) => callback(e.payload));
       break;
     case 'backendState':
-      unlisten = await TauriEvent.listen<SessionState>(event, (e) => callback(SessionState.fromState(e.payload)));
+      unlisten = await TauriEvent.listen<SessionState>(event, (e) =>
+        callback(SessionState.fromState(e.payload))
+      );
       break;
     case 'userInfo':
       unlisten = await TauriEvent.listen<UserInfo>(event, (e) => {
@@ -160,7 +162,7 @@ async function emitTauriEvent<E extends keyof Events>(event: E, data: Events[E][
   await TauriEvent.emit(event, data);
 }
 
-async function emitError(error: ErrorEvent): Promise<void> {
+export async function emitError(error: ErrorEvent): Promise<void> {
   await emitTauriEvent('error', error);
 }
 
@@ -169,16 +171,16 @@ export class EventHandler {
 
   private readonly configs: Map<string, AppConfig>;
 
-  private readonly enables: Map<string, AppEnabled>;
+  private readonly data: Map<string, AppData>;
 
   private unlisteners: TauriEvent.UnlistenFn[];
 
   #isInited: boolean = false;
 
-  constructor(session: BackendSession, configs: AppConfig[], enables: AppEnabled[]) {
+  constructor(session: BackendSession, configs: AppConfig[], data: AppData[]) {
     this.session = session;
     this.configs = new Map(configs.map((config) => [config.id, config]));
-    this.enables = new Map(enables.map((enable) => [enable.id, enable]));
+    this.data = new Map(data.map((d) => [d.id, d]));
     this.unlisteners = [];
 
     this.unlisteners.push(
@@ -236,12 +238,12 @@ export class EventHandler {
           emitError(`AppConfig ${id} does not exist`);
         }
       });
-      await this.handleRequest('appEnabled', (id) => {
-        const enabled = this.enables.get(id);
-        if (enabled) {
-          emitTauriEvent('appEnabled', enabled);
+      await this.handleRequest('appData', (id) => {
+        const data = this.data.get(id);
+        if (data) {
+          emitTauriEvent('appData', data);
         } else {
-          emitError(`AppEnabled ${id} does not exist`);
+          emitError(`appData ${id} does not exist`);
         }
       });
       await this.handleRequest('backendState', () =>
@@ -268,18 +270,18 @@ export class EventHandler {
     }
   }
 
-  appEnabled(id: string): AppEnabled | undefined {
-    return this.enables.get(id);
+  appData(id: string): AppData | undefined {
+    return this.data.get(id);
   }
 
   async setAppEnabled(id: string, enable: boolean): Promise<void> {
-    const enabled = this.enables.get(id);
-    if (enabled) {
-      enabled.enable = enable;
-      this.enables.set(id, enabled);
-      await emitTauriEvent('appEnabled', enabled);
+    const data = this.data.get(id);
+    if (data) {
+      data.enable = enable;
+      this.data.set(id, data);
+      await emitTauriEvent('appData', data);
     } else {
-      await emitError(`AppEnabled ${id} does not exist`);
+      await emitError(`appData ${id} does not exist`);
     }
   }
 

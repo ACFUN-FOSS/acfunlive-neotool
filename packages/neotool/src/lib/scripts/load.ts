@@ -61,7 +61,7 @@ export async function loadApp(jsPath: string, target: Element, cssPath?: string)
   });
 }
 
-export async function loadApps(appsDir: string): Promise<AppConfig[]> {
+export async function loadAppConfigs(appsDir: string): Promise<AppConfig[]> {
   const configs = await loadAppsConfig(appsDir);
   for (const config of configs) {
     config.entry = await canonicalize(await join(config.path, config.entry));
