@@ -1,19 +1,22 @@
 import { invoke } from '@tauri-apps/api/tauri';
 
-function checkPort(port: number) {
+function checkPort(port: number): void {
   if (port < 1024 || port > 65535) {
     throw new Error(`the port number is out of range: ${port}`);
   }
 }
 
-export function isAddressAvailable(hostname: string, port: number) {
+export async function isAddressAvailable(hostname: string, port: number): Promise<boolean> {
   checkPort(port);
 
-  invoke('plugin:acfunlive-neotool-serve-files|is_address_available', { hostname, port });
+  return await invoke('plugin:acfunlive-neotool-serve-files|is_address_available', {
+    hostname,
+    port
+  });
 }
 
 export class Server {
-  #id: number;
+  readonly #id: number;
 
   private constructor(id: number) {
     this.#id = id;

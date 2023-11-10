@@ -29,8 +29,8 @@ export async function load(): Promise<LoadedData> {
     const eventHandler = new EventHandler(
       session,
       appConfigs,
-      appConfigs.map((config) => {
-        return { id: config.id, enable: true };
+      appConfigs.map((c) => {
+        return { id: c.id, enable: config.appData[c.id]?.enable ?? true };
       })
     );
     await eventHandler.init();
@@ -42,6 +42,6 @@ export async function load(): Promise<LoadedData> {
       eventHandler
     };
   } catch (e) {
-    throw new Error(`failed load data: ${e}`);
+    throw new Error(`failed to load data: ${e}`);
   }
 }

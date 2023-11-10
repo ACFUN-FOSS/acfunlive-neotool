@@ -17,7 +17,7 @@
 
   const state = session.stateReadable;
 
-  const cleanup = session.connect();
+  const sessionCleanup = session.connect();
 
   let liverUID: number | undefined;
 
@@ -33,7 +33,7 @@
 
   let regex: RegExp | undefined;
 
-  $: if ($state.isLogin() && isOnline) {
+  $: if ($state.hasClientId() && isOnline) {
     session.sendMessageRepeatedly<StickerMessage>(neotoolID, {
       target: danmakuStickerID,
       type: 'isOnline',
@@ -43,10 +43,16 @@
 
   $: if (config && config.stickers.length > 0) {
     regex = stickersToRegex(config.stickers);
+  } else {
+    regex = undefined;
   }
 
   $: if (liverUID !== undefined && liverUID > 0) {
-    session.getDanmakuRepeatedly(liverUID);
+    if (isOnline) {
+      session.getDanmakuRepeatedly(liverUID);
+    } else {
+      session.stopDanmakuRepeatedly(liverUID);
+    }
   }
 
   const commentUnsubscribe = session.session.on('comment', (comment) => {
@@ -99,7 +105,9 @@
   onDestroy(() => {
     commentUnsubscribe();
     receiveUnsubscribe();
-    cleanup();
+    if (sessionCleanup) {
+      sessionCleanup();
+    }
   });
 </script>
 

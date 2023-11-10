@@ -45,6 +45,8 @@ export class BackendSession {
 
   readonly #getDanmakuRepeatedlySet: Writable<Set<UserID>>;
 
+  #isReconnecting: boolean = false;
+
   constructor(
     session: Session,
     clientID: string,
@@ -153,9 +155,8 @@ export class BackendSession {
    * 连接后端
    * @returns 进行清理和断开和后端连接的函数
    */
-  connect(): () => void {
-    if (!this.state.isConnecting() && !this.session.isConnecting()) {
-      this.session.connect();
+  connect(): (() => void) | undefined {
+    if (!this.state.isConnecting() && !this.session.isConnecting() && !this.#isReconnecting) {
       const openUnsubscribe = this.session.on('websocketOpen', () => {
         this.#id += 1;
         this.#state.update((state) => state.connect());
@@ -164,11 +165,13 @@ export class BackendSession {
       });
       const closeUnsubscribe = this.session.on('websocketClose', () => {
         // 断开会自动重连
+        this.#isReconnecting = true;
         this.#state.update((state) => state.disconnect());
         this.#streamInfoMap.set(new Map());
       });
       const errorUnsubscribe = this.session.on('websocketError', () => {
         // 出现错误会断开重连
+        this.#isReconnecting = true;
         this.#state.update((state) => state.disconnect());
         this.#streamInfoMap.set(new Map());
       });
@@ -211,8 +214,9 @@ export class BackendSession {
         }
       });
 
+      this.session.connect();
+
       return () => {
-        this.#token.set(undefined);
         this.#streamInfoMap.set(new Map());
         this.#getDanmakuRepeatedlySet.set(new Set());
         openUnsubscribe();
@@ -222,11 +226,12 @@ export class BackendSession {
         setTokenUnsubscribe();
         danmakuStopUnsubscribe();
         danmakuStopErrorUnsubscribe();
-        this.session.disConnect();
+        this.#isReconnecting = false;
+        this.session.disconnect();
         this.#state.update((state) => state.disconnect());
       };
     } else {
-      return () => {};
+      return;
     }
   }
 
@@ -419,6 +424,9 @@ export class BackendSession {
     }
   }
 
+  /** 请求弹幕，如果弹幕中断或者主播没在直播就不断重复请求
+   *
+   * 不会重复请求同一个主播的弹幕 */
   async getDanmakuRepeatedly(liverUID: UserID): Promise<void> {
     if (liverUID <= 0) {
       throw new Error(`liver UID is less than 1: ${liverUID}`);

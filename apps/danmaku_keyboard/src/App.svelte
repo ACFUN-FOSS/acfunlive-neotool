@@ -1,17 +1,17 @@
 <script lang="ts">
-  import { listen, request, type UnlistenFn } from '@acfunlive-neotool/shared';
+  import { emitError, listen, request, type UnlistenFn } from '@acfunlive-neotool/shared';
   import { onDestroy } from 'svelte';
 
-  import {
-    loadConfig,
-    saveConfig,
-    keysToRegex,
-    simulate,
-    waitInterval,
-    type KeyConfig
-  } from './scripts/key';
   import KeyComponent from './components/Key.svelte';
   import Input from './components/Input.svelte';
+  import {
+    loadConfig,
+    type KeyConfig,
+    keysToRegex,
+    saveConfig,
+    simulate,
+    waitInterval
+  } from './scripts/key';
 
   import './app.css';
   import appConfigJson from '../neotool.app.json';
@@ -19,20 +19,8 @@
   let cleanups: UnlistenFn[] = [];
 
   let enable = false;
-  listen('appData', (data) => (enable = data.enable), appConfigJson.id)
-    .then(async (unlisten) => {
-      cleanups.push(unlisten);
-      await request('appData', appConfigJson.id);
-    })
-    .catch((e) => console.log(`failed to listen appData: ${e}`));
 
   let liverUID: number | undefined;
-  listen('liverUID', (uid) => (liverUID = uid), undefined)
-    .then(async (unlisten) => {
-      cleanups.push(unlisten);
-      await request('liverUID', undefined);
-    })
-    .catch((e) => console.log(`failed to listen liverUID: ${e}`));
 
   let config: KeyConfig | undefined;
 
@@ -40,12 +28,8 @@
 
   let openInput = false;
 
-  loadConfig()
-    .then((c) => (config = c))
-    .catch((e) => console.log(`failed to load danmaku_keyboard config: ${e}`));
-
   $: if (config) {
-    saveConfig(config).catch((e) => console.log(`failed to save danmaku_keyboard config: ${e}`));
+    saveConfig(config).catch((e) => emitError(`failed to save danmaku_keyboard config: ${e}`));
     if (config.keys.length > 0) {
       regex = keysToRegex(config.keys);
     } else {
@@ -53,34 +37,49 @@
     }
   }
 
-  listen(
-    'danmaku',
-    async (danmaku) => {
-      if (enable && regex && danmaku.liverUID === liverUID) {
-        for (const match of danmaku.data.content.matchAll(regex)) {
-          for (const [i, group] of match.slice(1).entries()) {
-            if (group) {
-              const key = config?.keys[i];
-              if (key?.enable) {
-                try {
-                  await simulate(key);
-                } catch (e) {
-                  console.log(`failed to simulate keyboard input: ${e}`);
+  async function init(): Promise<void> {
+    try {
+      cleanups.push(
+        await listen('appData', (data) => (enable = data.enable), appConfigJson.id),
+        await listen('liverUID', (uid) => (liverUID = uid), undefined),
+        await listen(
+          'danmaku',
+          async (danmaku) => {
+            if (enable && regex && danmaku.liverUID === liverUID) {
+              for (const match of danmaku.data.content.matchAll(regex)) {
+                for (const [i, group] of match.slice(1).entries()) {
+                  if (group) {
+                    const key = config?.keys[i];
+                    if (key?.enable) {
+                      try {
+                        await simulate(key);
+                      } catch (e) {
+                        await emitError(`failed to simulate keyboard input: ${e}`);
+                      }
+
+                      break;
+                    }
+                  }
                 }
 
-                break;
+                await waitInterval(config);
               }
             }
-          }
+          },
+          undefined
+        )
+      );
 
-          await waitInterval(config);
-        }
-      }
-    },
-    undefined
-  )
-    .then((unlisten) => cleanups.push(unlisten))
-    .catch((e) => console.log(`failed to listen danmaku: ${e}`));
+      await request('appData', appConfigJson.id);
+      await request('liverUID', undefined);
+
+      config = await loadConfig();
+    } catch (e) {
+      await emitError(`${appConfigJson.id} init error: ${e}`);
+    }
+  }
+
+  init();
 
   onDestroy(() => {
     for (const cleanup of cleanups) {

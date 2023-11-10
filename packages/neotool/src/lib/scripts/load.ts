@@ -10,6 +10,7 @@ import {
 export type Config = {
   liverUID?: number;
   appsDir: string;
+  appData: Record<string, { enable: boolean }>;
 };
 
 const configFile = 'neotool.conf.json';
@@ -25,10 +26,11 @@ export async function loadConfig(): Promise<Config> {
       config.liverUID = undefined;
     }
     config.appsDir = config.appsDir || defaultAppsDir;
+    config.appData = config.appData || {};
 
     return config;
   } else {
-    return { appsDir: defaultAppsDir };
+    return { appsDir: defaultAppsDir, appData: {} };
   }
 }
 

@@ -1,15 +1,16 @@
 <script lang="ts">
   import {
+    danmakuStickerID,
+    danmakuStickerWebID,
     hostname,
     port,
-    danmakuStickerWebID,
-    danmakuStickerID,
+    type StickerConfig,
     StickerData,
-    type StickerMessage,
-    type StickerConfig
+    type StickerMessage
   } from '@acfunlive-neotool/danmaku-sticker-shared';
   import {
     delay,
+    emitError,
     listen,
     receiveMessage,
     request,
@@ -21,69 +22,82 @@
   import { join } from '@tauri-apps/api/path';
   import { onDestroy } from 'svelte';
   import type { AppConfig } from 'tauri-plugin-acfunlive-neotool-base-api';
-  import { Server } from 'tauri-plugin-acfunlive-neotool-serve-files-api';
+  import { isAddressAvailable, Server } from 'tauri-plugin-acfunlive-neotool-serve-files-api';
+
+  import Sticker from './components/Sticker.svelte';
+  import Pick from './components/Pick.svelte';
+  import { getPathInWeb, loadConfig, saveConfig, saveImage, symlinkDataDir } from './scripts/data';
 
   import './app.css';
   import appConfigJson from '../neotool.app.json';
-  import { loadConfig, saveConfig, saveImage, getPathInWeb, symlinkDataDir } from './scripts/data';
-  import Sticker from './components/Sticker.svelte';
-  import Pick from './components/Pick.svelte';
 
   let cleanups: UnlistenFn[] = [];
 
   let appConfig: AppConfig | undefined;
-  listen('appConfig', (config) => (appConfig = config), appConfigJson.id)
-    .then(async (unlisten) => {
-      cleanups.push(unlisten);
-      await request('appConfig', appConfigJson.id);
-    })
-    .catch((e) => console.log(`failed to listen appConfig: ${e}`));
 
   let enable = false;
-  listen('appData', (data) => (enable = data.enable), appConfigJson.id)
-    .then(async (unlisten) => {
-      cleanups.push(unlisten);
-      await request('appData', appConfigJson.id);
-    })
-    .catch((e) => console.log(`failed to listen appData: ${e}`));
 
   let state = new SessionState();
-  listen('backendState', (s) => (state = s), undefined)
-    .then(async (unlisten) => {
-      cleanups.push(unlisten);
-      await request('backendState', undefined);
-    })
-    .catch((e) => console.log(`failed to listen backend state: ${e}`));
 
   let liverUID: number | undefined;
-  listen('liverUID', (uid) => (liverUID = uid), undefined)
-    .then(async (unlisten) => {
-      cleanups.push(unlisten);
-      await request('liverUID', undefined);
-    })
-    .catch((e) => console.log(`failed to listen liverUID: ${e}`));
 
   let server: Server | undefined;
-  $: if (appConfig && server === undefined) {
-    join(appConfig.path, webDirName).then((path) =>
-      symlinkDataDir(path)
-        .catch((e) => console.log(`failed to create symlink to data directory: ${e}`))
-        .finally(() =>
-          Server.startServe(path, hostname, port)
-            .then((s) => (server = s))
-            .catch((e) => console.log(`failed to start the server: ${e}`))
-        )
-    );
+
+  let isStartingServer = false;
+
+  async function startServer(): Promise<void> {
+    if (!isStartingServer) {
+      isStartingServer = true;
+
+      if (appConfig) {
+        try {
+          const path = await join(appConfig.path, webDirName);
+          await symlinkDataDir(path);
+
+          while (true) {
+            if (server === undefined && (await isAddressAvailable(hostname, port))) {
+              if (enable) {
+                server = await Server.startServe(path, hostname, port);
+              }
+
+              break;
+            }
+
+            delay(5000);
+          }
+        } catch (e) {
+          emitError(`failed to start server: ${e}`);
+        }
+      }
+
+      isStartingServer = false;
+    }
+  }
+
+  async function stopServer(): Promise<void> {
+    const server_ = server;
+    server = undefined;
+
+    try {
+      if ((await server_?.isServing()) ?? false) {
+        await server_?.stopServe();
+      }
+    } catch (e) {
+      emitError(`failed to stop server: ${e}`);
+    }
+  }
+
+  $: if (appConfig) {
+    if (enable) {
+      startServer();
+    } else {
+      stopServer();
+    }
   }
 
   let config: StickerConfig | undefined;
-
-  loadConfig()
-    .then((c) => (config = c))
-    .catch((e) => console.log(`failed to load danmaku_sticker config: ${e}`));
-
   $: if (config) {
-    saveConfig(config).catch((e) => console.log(`failed to save danmaku_sticker config: ${e}`));
+    saveConfig(config).catch((e) => emitError(`failed to save danmaku_sticker config: ${e}`));
   }
 
   $: if (state.hasClientId() && config && liverUID !== undefined && liverUID > 0) {
@@ -94,7 +108,7 @@
         liverUID,
         config
       }
-    }).catch((e) => console.log(`failed to send message: ${e}`));
+    }).catch((e) => emitError(`failed to send message: ${e}`));
   }
 
   let openPick = false;
@@ -105,49 +119,82 @@
         target: danmakuStickerWebID,
         type: 'online',
         data: undefined
-      }).catch((e) => console.log(`failed to send message: ${e}`));
+      }).catch((e) => emitError(`failed to send message: ${e}`));
     } else {
       sendMessage<StickerMessage>(danmakuStickerWebID, {
         target: danmakuStickerWebID,
         type: 'offline',
         data: undefined
-      }).catch((e) => console.log(`failed to send message: ${e}`));
+      }).catch((e) => emitError(`failed to send message: ${e}`));
     }
   }
 
+  let hasSetAppConfig = false;
   let isSendingUpdate = false;
-  receiveMessage<StickerMessage>(danmakuStickerID, async (message) => {
-    if (message.type === 'isOnline') {
-      if (isSendingUpdate) {
-        return;
-      } else {
-        isSendingUpdate = true;
 
-        while (isSendingUpdate) {
-          if (state.hasClientId() && config && liverUID !== undefined && liverUID > 0) {
-            await sendMessage<StickerMessage>(danmakuStickerWebID, {
-              target: danmakuStickerWebID,
-              type: 'update',
-              data: {
-                liverUID,
-                config
+  async function init(): Promise<void> {
+    try {
+      cleanups.push(
+        await listen(
+          'appConfig',
+          (config) => {
+            if (!hasSetAppConfig) {
+              appConfig = config;
+              hasSetAppConfig = true;
+            }
+          },
+          appConfigJson.id
+        ),
+        await listen('appData', (data) => (enable = data.enable), appConfigJson.id),
+        await listen('backendState', (s) => (state = s), undefined),
+        await listen('liverUID', (uid) => (liverUID = uid), undefined),
+        await receiveMessage<StickerMessage>(danmakuStickerID, async (message) => {
+          if (message.type === 'isOnline') {
+            if (!isSendingUpdate) {
+              isSendingUpdate = true;
+
+              while (true) {
+                if (state.hasClientId() && config && liverUID !== undefined && liverUID > 0) {
+                  try {
+                    await sendMessage<StickerMessage>(danmakuStickerWebID, {
+                      target: danmakuStickerWebID,
+                      type: 'update',
+                      data: {
+                        liverUID,
+                        config
+                      }
+                    });
+                  } catch (e) {
+                    emitError(`failed to send message: ${e}`);
+                  }
+
+                  break;
+                } else {
+                  await delay(2000);
+                }
               }
-            }).catch((e) => console.log(`failed to send message: ${e}`));
 
-            break;
-          } else {
-            await delay(2000);
+              isSendingUpdate = false;
+            }
           }
-        }
+        })
+      );
 
-        isSendingUpdate = false;
-      }
+      await request('appConfig', appConfigJson.id);
+      await request('appData', appConfigJson.id);
+      await request('backendState', undefined);
+      await request('liverUID', undefined);
+
+      config = await loadConfig();
+    } catch (e) {
+      await emitError(`${appConfigJson.id} init error: ${e}`);
     }
-  })
-    .then((unlisten) => cleanups.push(unlisten))
-    .catch((e) => console.log(`failed to receive message: ${e}`));
+  }
+
+  init();
 
   onDestroy(() => {
+    stopServer();
     for (const cleanup of cleanups) {
       cleanup();
     }
@@ -194,20 +241,18 @@
 {#if openPick}
   <Pick
     bind:isOpen={openPick}
-    on:sticker={(event) => {
+    on:sticker={async (event) => {
       if (event.detail.imagePath) {
-        saveImage(event.detail.imagePath)
-          .then((path) =>
-            getPathInWeb(path)
-              .then((pathInWeb) => {
-                if (config) {
-                  config.stickers.push(new StickerData(event.detail.danmaku, path, pathInWeb));
-                  config.stickers = config.stickers;
-                }
-              })
-              .catch((e) => console.log(`failed to get image path of web: ${e}`))
-          )
-          .catch((e) => console.log(`failed to save image: ${e}`));
+        try {
+          const path = await saveImage(event.detail.imagePath);
+          const pathInWeb = await getPathInWeb(path);
+          if (config) {
+            config.stickers.push(new StickerData(event.detail.danmaku, path, pathInWeb));
+            config.stickers = config.stickers;
+          }
+        } catch (e) {
+          emitError(`failed to save image or config: ${e}`);
+        }
       }
     }}
   />

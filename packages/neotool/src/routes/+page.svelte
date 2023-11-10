@@ -1,6 +1,6 @@
 <script lang="ts">
   import { listen, emitError, type UnlistenFn, type UserInfo } from '@acfunlive-neotool/shared';
-  import { onDestroy } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
 
   import { saveConfig } from '$lib/scripts/load';
   import type { LayoutData } from './$types';
@@ -41,9 +41,6 @@
   const streamInfoMap = session.streamInfoMapReadable;
 
   let errorUnlisten: UnlistenFn | undefined;
-  listen('error', (e) => console.log(`event error: ${e}`), undefined)
-    .then((unlisten) => (errorUnlisten = unlisten))
-    .catch((e) => console.log(`failed to listen event error: ${e}`));
 
   function handleError(error: unknown) {
     // 因为listen有可能失败
@@ -106,12 +103,22 @@
     stateText = '正在直播';
   }
 
+  onMount(async () => {
+    try {
+      errorUnlisten = await listen('error', (e) => console.log(`event error: ${e}`), undefined);
+    } catch (e) {
+      console.log(`failed to listen event error: ${e}`);
+    }
+  });
+
   onDestroy(() => {
     if (errorUnlisten) {
       errorUnlisten();
     }
     eventHandler.cleanup();
-    sessionCleanup();
+    if (sessionCleanup) {
+      sessionCleanup();
+    }
   });
 </script>
 
@@ -156,7 +163,11 @@
             labelB=""
             toggled={eventHandler.appData(appConfig.id)?.enable ?? false}
             on:click={(e) => e.stopPropagation()}
-            on:toggle={(e) => eventHandler.setAppEnabled(appConfig.id, e.detail.toggled)}
+            on:toggle={(e) => {
+              eventHandler.setAppEnabled(appConfig.id, e.detail.toggled);
+              config.appData[appConfig.id] = { enable: e.detail.toggled };
+              config.appData = config.appData;
+            }}
           ></Toggle>
         </div>
       </SideNavLink>

@@ -87,7 +87,7 @@ export type Key =
   | '/';
 
 export class KeyboardListener {
-  #id: number;
+  readonly #id: number;
 
   private constructor(id: number) {
     this.#id = id;
