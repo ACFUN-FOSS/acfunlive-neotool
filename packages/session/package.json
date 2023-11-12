@@ -14,7 +14,7 @@
   "dependencies": {
     "@acfunlive-neotool/utils": "link:../utils",
     "acfunlive-backend-js": "github:ACFUN-FOSS/acfunlive-backend-js",
-    "svelte": "^4.2.2"
+    "svelte": "^4.2.3"
   },
   "devDependencies": {
     "tslib": "^2.6.2",

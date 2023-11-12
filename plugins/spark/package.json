@@ -1,11 +1,13 @@
 {
-  "name": "tauri-plugin-acfunlive-neotool-base-api",
+  "name": "tauri-plugin-acfunlive-neotool-spark-api",
   "version": "0.1.0",
-  "description": "acfunlive-neotool tauri base plugin API",
+  "description": "acfunlive-neotool tauri plugin for XunFei spark AI model API",
   "keywords": [
     "tauri",
     "acfun",
-    "acfunlive"
+    "acfunlive",
+    "xunfei",
+    "spark"
   ],
   "license": "AGPL-3.0-only",
   "author": "orzogc",

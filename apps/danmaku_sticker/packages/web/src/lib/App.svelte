@@ -6,18 +6,19 @@
     type StickerMessage,
     type StickerConfig
   } from '@acfunlive-neotool/danmaku-sticker-shared';
-  import { BackendSession, neotoolID } from '@acfunlive-neotool/session';
-  import webApiSession from 'acfunlive-backend-js/webapi.js';
-  import { onDestroy } from 'svelte';
+  import { BackendSession, neotoolID, type SessionState } from '@acfunlive-neotool/session';
+  import { type unsubscribe, default as webApiSession } from 'acfunlive-backend-js/webapi.js';
+  import { onDestroy, onMount } from 'svelte';
+  import type { Readable } from 'svelte/store';
 
   import Danmaku from './components/Danmaku.svelte';
   import { stickersToRegex, gap, type Sticker } from './scripts/danmaku';
 
-  const session = new BackendSession(webApiSession(), danmakuStickerWebID);
+  let session: BackendSession | undefined;
 
-  const state = session.stateReadable;
+  let state: Readable<SessionState> | undefined;
 
-  const sessionCleanup = session.connect();
+  let sessionCleanup: unsubscribe | undefined;
 
   let liverUID: number | undefined;
 
@@ -33,7 +34,7 @@
 
   let regex: RegExp | undefined;
 
-  $: if ($state.hasClientId() && isOnline) {
+  $: if (session && state && $state!.hasClientId() && isOnline) {
     session.sendMessageRepeatedly<StickerMessage>(neotoolID, {
       target: danmakuStickerID,
       type: 'isOnline',
@@ -47,7 +48,7 @@
     regex = undefined;
   }
 
-  $: if (liverUID !== undefined && liverUID > 0) {
+  $: if (session && liverUID !== undefined && liverUID > 0) {
     if (isOnline) {
       session.getDanmakuRepeatedly(liverUID);
     } else {
@@ -55,58 +56,94 @@
     }
   }
 
-  const commentUnsubscribe = session.session.on('comment', (comment) => {
-    if (isOnline && regex && comment.liverUID === liverUID) {
-      for (const match of comment.data.content.matchAll(regex)) {
-        for (const [i, group] of match.slice(1).entries()) {
-          if (group) {
-            const sticker = config?.stickers[i];
-            if (sticker?.enable) {
-              const newId = id++;
-              data.push({ id: newId, data: sticker });
-              data = data;
+  let commentUnsubscribe: unsubscribe | undefined;
 
-              setTimeout(
-                () => {
-                  const index = data.findIndex((s) => s.id === newId);
-                  if (index >= 0) {
-                    data.splice(index, 1);
-                    data = data;
-                  }
-                },
-                (sticker.duration || defaultDuration) + gap
-              );
+  $: if (session) {
+    if (commentUnsubscribe) {
+      commentUnsubscribe();
+      commentUnsubscribe = undefined;
+    }
 
-              return;
+    commentUnsubscribe = session.session.on('comment', (comment) => {
+      if (isOnline && regex && comment.liverUID === liverUID) {
+        for (const match of comment.data.content.matchAll(regex)) {
+          for (const [i, group] of match.slice(1).entries()) {
+            if (group) {
+              const sticker = config?.stickers[i];
+              if (sticker?.enable) {
+                const newId = id++;
+                data.push({ id: newId, data: sticker });
+                data = data;
+
+                setTimeout(
+                  () => {
+                    const index = data.findIndex((s) => s.id === newId);
+                    if (index >= 0) {
+                      data.splice(index, 1);
+                      data = data;
+                    }
+                  },
+                  (sticker.duration || defaultDuration) + gap
+                );
+
+                return;
+              }
             }
           }
         }
       }
+    });
+  }
+
+  let receiveUnsubscribe: unsubscribe | undefined;
+
+  $: if (session) {
+    if (receiveUnsubscribe) {
+      receiveUnsubscribe();
+      receiveUnsubscribe = undefined;
     }
+
+    receiveUnsubscribe = session.onReceiveMessage<StickerMessage>(
+      danmakuStickerWebID,
+      (message) => {
+        if (message.type === 'online') {
+          isOnline = true;
+        } else if (message.type === 'offline') {
+          isOnline = false;
+        } else if (message.type === 'update') {
+          if (
+            session &&
+            liverUID !== undefined &&
+            liverUID > 0 &&
+            liverUID !== message.data.liverUID
+          ) {
+            session.stopDanmakuRepeatedly(liverUID);
+          }
+          liverUID = message.data.liverUID;
+          config = message.data.config;
+        }
+      }
+    );
+  }
+
+  onMount(() => {
+    session = new BackendSession(webApiSession(), danmakuStickerWebID);
+    state = session.stateReadable;
+    sessionCleanup = session.connect();
   });
 
-  const receiveUnsubscribe = session.onReceiveMessage<StickerMessage>(
-    danmakuStickerWebID,
-    (message) => {
-      if (message.type === 'online') {
-        isOnline = true;
-      } else if (message.type === 'offline') {
-        isOnline = false;
-      } else if (message.type === 'update') {
-        if (liverUID !== undefined && liverUID > 0 && liverUID !== message.data.liverUID) {
-          session.stopDanmakuRepeatedly(liverUID);
-        }
-        liverUID = message.data.liverUID;
-        config = message.data.config;
-      }
-    }
-  );
-
   onDestroy(() => {
-    commentUnsubscribe();
-    receiveUnsubscribe();
+    if (commentUnsubscribe) {
+      commentUnsubscribe();
+      commentUnsubscribe = undefined;
+    }
+    if (receiveUnsubscribe) {
+      receiveUnsubscribe();
+      receiveUnsubscribe = undefined;
+    }
     if (sessionCleanup) {
       sessionCleanup();
+      sessionCleanup = undefined;
     }
   });
 </script>

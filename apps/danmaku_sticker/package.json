@@ -20,7 +20,7 @@
     "@acfunlive-neotool/danmaku-sticker-shared": "link:packages/shared",
     "@acfunlive-neotool/shared": "link:../../packages/shared",
     "@tauri-apps/api": "^1.5.1",
-    "svelte": "^4.2.2",
+    "svelte": "^4.2.3",
     "tauri-plugin-acfunlive-neotool-base-api": "link:../../plugins/base",
     "tauri-plugin-acfunlive-neotool-serve-files-api": "link:../../plugins/serve_files"
   },
@@ -31,12 +31,12 @@
     "autoprefixer": "^10.4.16",
     "daisyui": "^3.9.4",
     "postcss": "^8.4.31",
-    "rollup": "^4.3.0",
+    "rollup": "^4.4.0",
     "rollup-plugin-scss": "^4.0.0",
     "rollup-plugin-svelte": "^7.1.6",
     "rollup-plugin-typescript2": "^0.36.0",
     "sass": "^1.69.5",
-    "svelte-preprocess": "^5.0.4",
+    "svelte-preprocess": "^5.1.0",
     "tailwindcss": "^3.3.5",
     "tslib": "^2.6.2",
     "typescript": "^5.2.2"
