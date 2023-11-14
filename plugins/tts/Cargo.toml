@@ -8,6 +8,8 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+acfunlive-neotool-audio = { version = "0.1.0", path = "../../crates/audio" }
+acfunlive-neotool-xunfei = { version = "0.1.0", path = "../../crates/xunfei" }
 base64 = "0.21.5"
 futures-util = { version = "0.3.29", features = ["sink"] }
 serde.workspace = true
@@ -19,8 +21,6 @@ time = { version = "0.3.30" }
 tokio-tungstenite = { version = "0.20.1", features = [
   "rustls-tls-native-roots",
 ] }
-acfunlive-neotool-xunfei = { version = "0.1.0", path = "../../crates/xunfei" }
-acfunlive-neotool-audio = { version = "0.1.0", path = "../../crates/audio" }
 
 [dev-dependencies]
 tokio = { version = "1.34.0", features = ["rt", "macros"] }

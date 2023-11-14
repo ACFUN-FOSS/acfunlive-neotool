@@ -1,0 +1,36 @@
+{
+  "name": "tauri-plugin-acfunlive-neotool-audio-api",
+  "version": "0.1.0",
+  "description": "acfunlive-neotool tauri plugin for audio",
+  "keywords": [
+    "tauri",
+    "acfun",
+    "acfunlive",
+    "audio"
+  ],
+  "license": "AGPL-3.0-only",
+  "author": "orzogc",
+  "type": "module",
+  "browser": "dist-js/index.min.js",
+  "module": "dist-js/index.mjs",
+  "types": "dist-js/index.d.ts",
+  "exports": {
+    "import": "./dist-js/index.mjs",
+    "types": "./dist-js/index.d.ts",
+    "browser": "./dist-js/index.min.js"
+  },
+  "scripts": {
+    "dev": "rollup -c -w",
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.5.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "rollup": "^4.4.1",
+    "tslib": "^2.6.2",
+    "typescript": "^5.2.2"
+  }
+}

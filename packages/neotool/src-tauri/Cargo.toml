@@ -22,6 +22,7 @@ tauri = { version = "1.5.2", features = [ "dialog-open",
   "path-all",
   "protocol-asset",
 ] }
+tauri-plugin-acfunlive-neotool-audio = { version = "0.1.0", path = "../../../plugins/audio" }
 tauri-plugin-acfunlive-neotool-base = { version = "0.1.0", path = "../../../plugins/base" }
 tauri-plugin-acfunlive-neotool-keyboard = { version = "0.1.0", path = "../../../plugins/keyboard" }
 tauri-plugin-acfunlive-neotool-serve-files = { version = "0.1.0", path = "../../../plugins/serve_files" }

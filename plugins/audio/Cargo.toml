@@ -1,0 +1,20 @@
+[package]
+name = "tauri-plugin-acfunlive-neotool-audio"
+version = "0.1.0"
+description = "acfunlive-neotool tauri plugin for audio"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+acfunlive-neotool-audio = { version = "0.1.0", path = "../../crates/audio" }
+once_cell.workspace = true
+serde.workspace = true
+tauri = { version = "1.5.2" }
+thiserror.workspace = true
+tokio = { version = "1.34.0", features = ["sync"] }
+rodio = { version = "0.17.3", default-features = false, features = [
+  "mp3",
+  "symphonia-wav",
+] }

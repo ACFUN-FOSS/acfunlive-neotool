@@ -21,6 +21,14 @@ type Id = u32;
 
 static ID: Lazy<Mutex<Id>> = Lazy::new(|| Mutex::new(0));
 
+#[inline]
+async fn new_id() -> Id {
+    let mut id = ID.lock().await;
+    *id += 1;
+
+    *id
+}
+
 #[derive(Debug)]
 struct ListenData {
     _key_down_guard: Box<dyn Any + Send + Sync + 'static>,
@@ -58,11 +66,7 @@ async fn start_listen<R: Runtime>(
         (key_down_guard, key_up_guard)
     };
 
-    let id = {
-        let mut id = ID.lock().await;
-        *id += 1;
-        *id
-    };
+    let id = new_id().await;
     let manager = window.state::<ListenManager>();
 
     manager.0.lock().await.insert(
