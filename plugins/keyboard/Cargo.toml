@@ -1,9 +1,9 @@
 [package]
 name = "tauri-plugin-acfunlive-neotool-keyboard"
 version = "0.1.0"
+description = "acfunlive-neotool tauri keyboard plugin"
 authors.workspace = true
 license.workspace = true
-description = "acfunlive-neotool tauri keyboard plugin"
 edition.workspace = true
 rust-version.workspace = true
 

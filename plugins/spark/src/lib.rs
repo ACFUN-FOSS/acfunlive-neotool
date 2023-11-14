@@ -2,63 +2,41 @@ mod data;
 
 pub use data::*;
 
-use base64::engine::{general_purpose::STANDARD, Engine};
+use acfunlive_neotool_xunfei::authorization;
 use futures_util::{SinkExt, StreamExt};
-use hmac_sha256::HMAC;
 use tauri::{
+    api::ipc::{format_callback, CallbackFn},
     command,
     plugin::{Builder, TauriPlugin},
-    Runtime,
+    Runtime, Window,
 };
-use time::{format_description::well_known::Rfc2822, OffsetDateTime};
+use time::OffsetDateTime;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
-use url::Url;
 
 const URL: &str = "wss://spark-api.xf-yun.com/v3.1/chat";
-const HOST: &str = "spark-api.xf-yun.com";
-const PATH: &str = "/v3.1/chat";
 
-type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("time format error: {0}")]
-    TimeFormatError(#[from] time::error::Format),
-    #[error("URL parsed error: {0}")]
-    UrlParseError(#[from] url::ParseError),
     #[error("serde json error: {0}")]
     SerdeJsonError(#[from] serde_json::Error),
     #[error("tungstenite WebSocket error: {0}")]
     TungsteniteError(#[from] tokio_tungstenite::tungstenite::error::Error),
+    #[error("XunFei error: {0}")]
+    XunFeiError(#[from] acfunlive_neotool_xunfei::Error),
     #[error("spark request error: {0}")]
     SparkRequestError(String),
-    #[error("spark response error: {0}")]
-    SparkResponseError(&'static str),
     #[error("spark API error: {0}")]
     SparkApiError(String),
 }
 
-/// 鉴权，返回URL
-fn authorization(api_secret: &str, api_key: &str, time: OffsetDateTime) -> Result<Url> {
-    let date = time.format(&Rfc2822)?;
-    let header = format!("host: {HOST}\ndate: {date}\nGET {PATH} HTTP/1.1");
-    let hmac = HMAC::mac(header, api_secret);
-    let signature = STANDARD.encode(hmac);
-    let authorization_origin = format!("api_key=\"{api_key}\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"{signature}\"");
-    let authorization = STANDARD.encode(authorization_origin);
-
-    Ok(Url::parse_with_params(
-        URL,
-        [
-            ("authorization", authorization.as_str()),
-            ("date", date.as_str()),
-            ("host", HOST),
-        ],
-    )?)
-}
-
-pub async fn spark_request(request: SparkRequest) -> Result<SparkResponse> {
+pub async fn spark_request<F: FnMut(String)>(
+    request: SparkRequest,
+    mut callback: F,
+) -> Result<TokenStatistics> {
     let url = authorization(
+        URL,
         &request.api_secret,
         &request.api_key,
         OffsetDateTime::now_utc(),
@@ -67,8 +45,8 @@ pub async fn spark_request(request: SparkRequest) -> Result<SparkResponse> {
 
     let (mut client, _) = connect_async(url).await?;
     client.send(Message::Text(request)).await?;
+    let mut tokens = None;
 
-    let mut responses = Vec::new();
     loop {
         match client.next().await {
             Some(Ok(Message::Text(resp))) => {
@@ -81,10 +59,21 @@ pub async fn spark_request(request: SparkRequest) -> Result<SparkResponse> {
                     )));
                 }
 
-                if responses.is_empty() && response.is_end() {
-                    return SparkResponse::try_from(response);
+                if response.is_end() {
+                    callback(response.content().ok_or(Error::SparkApiError(String::from(
+                        "missing content in last response",
+                    )))?);
+                    tokens = Some(response.token_statistics().ok_or(Error::SparkApiError(
+                        String::from("missing usage in last response"),
+                    ))?);
+
+                    break;
                 } else {
-                    responses.push(response);
+                    callback(response.content().ok_or(Error::SparkApiError(String::from(
+                        "missing content in response",
+                    )))?);
+
+                    continue;
                 }
             }
             Some(Ok(Message::Close(_))) | None => break,
@@ -98,43 +87,53 @@ pub async fn spark_request(request: SparkRequest) -> Result<SparkResponse> {
         }
     }
 
-    SparkResponse::try_from(responses)
+    tokens.ok_or(Error::SparkApiError(String::from(
+        "missing usage in responses",
+    )))
+}
+
+pub async fn spark_request_full(request: SparkRequest) -> Result<SparkResponse> {
+    let mut content = String::new();
+    let tokens = spark_request(request, |c| content.push_str(&c)).await?;
+
+    Ok(SparkResponse { content, tokens })
 }
 
 #[command]
-async fn spark_chat(request: SparkRequest) -> std::result::Result<SparkResponse, String> {
-    spark_request(request).await.map_err(|e| e.to_string())
+async fn spark_chat<R: Runtime>(
+    window: Window<R>,
+    request: SparkRequest,
+    callback: CallbackFn,
+) -> std::result::Result<TokenStatistics, String> {
+    spark_request(request, |content| {
+        let js = format_callback(callback, &content)
+            .expect("unable to serialize spark response content");
+        let _ = window.eval(&js);
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[command]
+async fn spark_chat_full(request: SparkRequest) -> std::result::Result<SparkResponse, String> {
+    spark_request_full(request).await.map_err(|e| e.to_string())
 }
 
 /// Initializes the plugin.
 #[inline]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("acfunlive-neotool-spark")
-        .invoke_handler(tauri::generate_handler![spark_chat])
+        .invoke_handler(tauri::generate_handler![spark_chat, spark_chat_full])
         .build()
 }
 
-#[cfg(test)]
+/* #[cfg(test)]
 mod tests {
     use super::*;
-    use time::OffsetDateTime;
-    use url::Url;
 
-    #[test]
-    fn test_authorization() {
-        let url = authorization(
-            "MjlmNzkzNmZkMDQ2OTc0ZDdmNGE2ZTZi",
-            "addd2272b6d8b7c8abdd79531420ca3b",
-            OffsetDateTime::from_unix_timestamp(1683254619).unwrap(),
-        )
-        .unwrap();
-
-        assert_eq!(url, Url::parse("wss://spark-api.xf-yun.com/v3.1/chat?authorization=YXBpX2tleT0iYWRkZDIyNzJiNmQ4YjdjOGFiZGQ3OTUzMTQyMGNhM2IiLCBhbGdvcml0aG09ImhtYWMtc2hhMjU2IiwgaGVhZGVycz0iaG9zdCBkYXRlIHJlcXVlc3QtbGluZSIsIHNpZ25hdHVyZT0iSm1LWFBZYmFVRjg2R0pOY0ZEaEEwaGY1WmJ5TGdib0cxTVNKYml3ZzNBVT0i&date=Fri%2C+05+May+2023+02%3A43%3A39+%2B0000&host=spark-api.xf-yun.com").unwrap());
-    }
-
-    /* #[tokio::test]
-    async fn test_spark() {
-        let _ = spark_request(SparkRequest {
+    #[tokio::test]
+    async fn test_spark_request_all() {
+        let response = spark_request_full(SparkRequest {
             app_id: String::from(""),
             api_secret: String::from(""),
             api_key: String::from(""),
@@ -148,5 +147,7 @@ mod tests {
         })
         .await
         .unwrap();
-    } */
-}
+
+        println!("resp: {:?}", response);
+    }
+} */

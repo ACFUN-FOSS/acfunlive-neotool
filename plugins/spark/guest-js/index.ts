@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke, transformCallback } from '@tauri-apps/api/tauri';
 
 export type Role = 'user' | 'assistant';
 
@@ -8,25 +8,39 @@ export type RequestText = {
 };
 
 export type SparkRequest = {
-  app_id: string;
-  api_secret: string;
-  api_key: string;
+  appId: string;
+  apiSecret: string;
+  apiKey: string;
   uid?: string;
   temperature?: number;
-  max_tokens?: number;
-  top_k?: number;
-  chat_id?: string;
+  maxTokens?: number;
+  topK?: number;
+  chatId?: string;
   history?: RequestText[];
   content: string;
 };
 
-export type SparkResponse = {
-  content: string;
-  prompt_tokens: number;
-  completion_tokens: number;
-  total_tokens: number;
+export type TokenStatistics = {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
 };
 
-export async function sparkChat(request: SparkRequest): Promise<SparkResponse> {
-  return await invoke('plugin:acfunlive-neotool-spark|spark_chat', { request });
+export type SparkResponse = {
+  content: string;
+  tokens: TokenStatistics;
+};
+
+export async function sparkChat(
+  request: SparkRequest,
+  callback: (content: string) => void
+): Promise<TokenStatistics> {
+  return await invoke('plugin:acfunlive-neotool-spark|spark_chat', {
+    request,
+    callback: transformCallback(callback)
+  });
+}
+
+export async function sparkChatFull(request: SparkRequest): Promise<SparkResponse> {
+  return await invoke('plugin:acfunlive-neotool-spark|spark_chat_full', { request });
 }

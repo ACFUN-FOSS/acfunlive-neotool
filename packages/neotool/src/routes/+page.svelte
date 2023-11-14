@@ -37,6 +37,7 @@
   const eventHandler = data.eventHandler;
 
   const state = session.stateReadable;
+  const liverUID = session.liverUIDReadable;
   const userInfoMap = session.userInfoMapReadable;
   const streamInfoMap = session.streamInfoMapReadable;
 
@@ -56,21 +57,21 @@
 
   const sessionCleanup = session.connect();
 
-  // 设置session里的liverUID
-  $: if (config.liverUID && config.liverUID > 0) {
+  // 设置liverUID
+  $: if (config.liverUID && config.liverUID > 0 && $liverUID !== config.liverUID) {
     session.liverUID = config.liverUID;
   }
 
   // 获取主播的帐号信息
   let userInfo: UserInfo | undefined;
-  $: if ($userInfoMap && config.liverUID && config.liverUID > 0) {
-    userInfo = session.getUserInfo(config.liverUID);
+  $: if ($userInfoMap && $liverUID && $liverUID > 0) {
+    userInfo = session.getUserInfo($liverUID);
   }
 
   // 是否正在获取弹幕
   let isGettingDanmaku = false;
-  $: if ($streamInfoMap && config.liverUID && config.liverUID > 0) {
-    if (session.isGettingDanmaku(config.liverUID)) {
+  $: if ($streamInfoMap && $liverUID && $liverUID > 0) {
+    if (session.isGettingDanmaku($liverUID)) {
       isGettingDanmaku = true;
     } else {
       isGettingDanmaku = false;
@@ -78,8 +79,8 @@
   }
 
   // 主播ID变化时获取弹幕
-  $: if (config.liverUID && config.liverUID > 0 && $state.isConnecting() && $state.isLogin()) {
-    session.getDanmakuRepeatedly(config?.liverUID);
+  $: if ($liverUID && $liverUID > 0 && $state.isConnecting() && $state.isLogin()) {
+    session.getDanmakuRepeatedly($liverUID);
   }
 
   // 没有主播ID时强制要求输入ID
@@ -191,14 +192,16 @@
   bind:isOpen={openUIDDialog}
   liverUID={config.liverUID}
   on:liverUID={(uid) => {
-    if (config.liverUID) {
-      if (config.liverUID !== uid.detail) {
-        // 停止获取旧的弹幕后会重新获取新的弹幕
-        session.stopDanmakuRepeatedly(config.liverUID);
+    if (uid.detail > 0) {
+      if (config.liverUID) {
+        if (config.liverUID !== uid.detail) {
+          // 停止获取旧的弹幕后会重新获取新的弹幕
+          session.stopDanmakuRepeatedly(config.liverUID);
+          config.liverUID = uid.detail;
+        }
+      } else {
         config.liverUID = uid.detail;
       }
-    } else {
-      config.liverUID = uid.detail;
     }
   }}
 />

@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/neotool/src-tauri", "plugins/*"]
+members = ["crates/*", "packages/neotool/src-tauri", "plugins/*"]
 resolver = "2"
 
 [workspace.package]

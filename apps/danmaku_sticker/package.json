@@ -31,7 +31,7 @@
     "autoprefixer": "^10.4.16",
     "daisyui": "^3.9.4",
     "postcss": "^8.4.31",
-    "rollup": "^4.4.0",
+    "rollup": "^4.4.1",
     "rollup-plugin-scss": "^4.0.0",
     "rollup-plugin-svelte": "^7.1.6",
     "rollup-plugin-typescript2": "^0.36.0",

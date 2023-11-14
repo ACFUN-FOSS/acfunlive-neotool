@@ -90,6 +90,7 @@ pub(crate) struct ResponseText {
 #[derive(Clone, Debug, Deserialize)]
 pub(crate) struct ResponseChoices {
     pub(crate) status: ResponseStatus,
+    #[allow(dead_code)]
     pub(crate) seq: u32,
     pub(crate) text: Vec<ResponseText>,
 }
@@ -129,6 +130,28 @@ impl Response {
                 .as_ref()
                 .map_or(false, |p| p.choices.status == ResponseStatus::End)
     }
+
+    #[inline]
+    pub(crate) fn content(&self) -> Option<String> {
+        self.payload.as_ref().map(|payload| {
+            payload.choices.text.iter().fold(String::new(), |mut s, t| {
+                s.push_str(&t.content);
+
+                s
+            })
+        })
+    }
+
+    #[inline]
+    pub(crate) fn token_statistics(&self) -> Option<TokenStatistics> {
+        self.payload.as_ref().and_then(|payload| {
+            payload.usage.as_ref().map(|usage| TokenStatistics {
+                prompt_tokens: usage.text.prompt_tokens,
+                completion_tokens: usage.text.completion_tokens,
+                total_tokens: usage.text.total_tokens,
+            })
+        })
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -146,17 +169,29 @@ pub struct SparkRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct SparkResponse {
-    pub content: String,
+pub struct TokenStatistics {
     pub prompt_tokens: u32,
     pub completion_tokens: u32,
     pub total_tokens: u32,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct SparkResponse {
+    pub content: String,
+    pub tokens: TokenStatistics,
 }
 
 impl TryFrom<SparkRequest> for Request {
     type Error = Error;
 
     fn try_from(request: SparkRequest) -> Result<Self> {
+        if request.app_id.is_empty() || request.api_secret.is_empty() || request.api_key.is_empty()
+        {
+            return Err(Error::SparkRequestError(String::from(
+                "app_id, api_secret or api_key is empty",
+            )));
+        }
+
         if let Some(uid) = &request.uid {
             if uid.len() > 32 {
                 return Err(Error::SparkRequestError(format!(
@@ -224,99 +259,5 @@ impl TryFrom<SparkRequest> for Request {
                 message: RequestMessage { text },
             },
         })
-    }
-}
-
-impl TryFrom<Vec<Response>> for SparkResponse {
-    type Error = Error;
-
-    fn try_from(mut responses: Vec<Response>) -> Result<Self> {
-        if responses.iter().any(|resp| resp.payload.is_none()) {
-            return Err(Error::SparkResponseError("missing payload in response"));
-        }
-        // `unwrap` is safe here.
-        responses.sort_unstable_by_key(|resp| resp.payload.as_ref().unwrap().choices.seq);
-
-        let (prompt_tokens, completion_tokens, total_tokens) = match responses.last() {
-            Some(
-                resp @ Response {
-                    payload:
-                        Some(ResponsePayload {
-                            usage: Some(usage), ..
-                        }),
-                    ..
-                },
-            ) => {
-                if resp.is_end() {
-                    (
-                        usage.text.prompt_tokens,
-                        usage.text.completion_tokens,
-                        usage.text.total_tokens,
-                    )
-                } else {
-                    return Err(Error::SparkResponseError(
-                        "the last response in list is not the end of responses",
-                    ));
-                }
-            }
-            None => return Err(Error::SparkResponseError("the response list is empty")),
-            _ => {
-                return Err(Error::SparkResponseError(
-                    "failed to find token usage in response list",
-                ))
-            }
-        };
-
-        Ok(SparkResponse {
-            content: responses.iter().fold(String::new(), |mut s, resp| {
-                // `unwrap` is safe here.
-                s.push_str(&resp.payload.as_ref().unwrap().choices.text.iter().fold(
-                    String::new(),
-                    |mut s, text| {
-                        s.push_str(&text.content);
-
-                        s
-                    },
-                ));
-
-                s
-            }),
-            prompt_tokens,
-            completion_tokens,
-            total_tokens,
-        })
-    }
-}
-
-impl TryFrom<Response> for SparkResponse {
-    type Error = Error;
-
-    #[inline]
-    fn try_from(response: Response) -> Result<Self> {
-        if response.is_end() {
-            match response.payload {
-                Some(ResponsePayload {
-                    choices,
-                    usage: Some(usage),
-                }) => Ok(SparkResponse {
-                    content: choices.text.iter().fold(String::new(), |mut s, t| {
-                        s.push_str(&t.content);
-
-                        s
-                    }),
-                    prompt_tokens: usage.text.prompt_tokens,
-                    completion_tokens: usage.text.completion_tokens,
-                    total_tokens: usage.text.total_tokens,
-                }),
-                None => Err(Error::SparkResponseError("missing payload in response")),
-                _ => Err(Error::SparkResponseError(
-                    "failed to find token usage in response",
-                )),
-            }
-        } else {
-            Err(Error::SparkResponseError(
-                "the response is not the end response",
-            ))
-        }
     }
 }

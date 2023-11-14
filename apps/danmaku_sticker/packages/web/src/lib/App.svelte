@@ -34,7 +34,7 @@
 
   let regex: RegExp | undefined;
 
-  $: if (session && state && $state!.hasClientId() && isOnline) {
+  $: if (session && $state && $state.hasClientId() && isOnline) {
     session.sendMessageRepeatedly<StickerMessage>(neotoolID, {
       target: danmakuStickerID,
       type: 'isOnline',
@@ -61,7 +61,6 @@
   $: if (session) {
     if (commentUnsubscribe) {
       commentUnsubscribe();
-      commentUnsubscribe = undefined;
     }
 
     commentUnsubscribe = session.session.on('comment', (comment) => {
@@ -100,7 +99,6 @@
   $: if (session) {
     if (receiveUnsubscribe) {
       receiveUnsubscribe();
-      receiveUnsubscribe = undefined;
     }
 
     receiveUnsubscribe = session.onReceiveMessage<StickerMessage>(
@@ -115,11 +113,14 @@
             session &&
             liverUID !== undefined &&
             liverUID > 0 &&
+            message.data.liverUID > 0 &&
             liverUID !== message.data.liverUID
           ) {
             session.stopDanmakuRepeatedly(liverUID);
           }
-          liverUID = message.data.liverUID;
+          if (message.data.liverUID > 0 && liverUID !== message.data.liverUID) {
+            liverUID = message.data.liverUID;
+          }
           config = message.data.config;
         }
       }

@@ -112,6 +112,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .setup(|app| {
             app.manage(ListenManager::default());
             app.manage(InputManager::default());
+
             Ok(())
         })
         .build()

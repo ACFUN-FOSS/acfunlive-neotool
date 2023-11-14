@@ -1,0 +1,15 @@
+[package]
+name = "acfunlive-neotool-xunfei"
+version = "0.1.0"
+description = "some XunFei API"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+base64 = "0.21.5"
+hmac-sha256 = "1.1.7"
+thiserror.workspace = true
+time = { version = "0.3.30", features = ["formatting"] }
+url = "2.4.1"
