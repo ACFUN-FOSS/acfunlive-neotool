@@ -9,6 +9,7 @@ rust-version.workspace = true
 
 [dependencies]
 dunce = "1.0.4"
+keyring = "2.0.5"
 serde.workspace = true
 serde_json.workspace = true
 sha256 = "1.4.0"

@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "sourceMap": false,
+    "target": "es6"
+  },
+  "exclude": ["./index.js", "./src/index.js"],
+  "extends": "../../tsconfig.base.json"
+}

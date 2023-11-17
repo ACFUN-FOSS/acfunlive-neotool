@@ -7,9 +7,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("time format error: {0}")]
+    #[error(transparent)]
     TimeFormatError(#[from] time::error::Format),
-    #[error("URL parsed error: {0}")]
+    #[error(transparent)]
     UrlParseError(#[from] url::ParseError),
 }
 

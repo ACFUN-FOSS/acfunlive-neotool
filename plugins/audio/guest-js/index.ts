@@ -1,5 +1,7 @@
 import { invoke } from '@tauri-apps/api/tauri';
 
+export type AudioSourceId = number;
+
 export class Audio {
   readonly #id: number;
 
@@ -23,8 +25,14 @@ export class Audio {
     });
   }
 
-  async add(audioSourceId: number): Promise<void> {
+  async add(audioSourceId: AudioSourceId): Promise<void> {
     await invoke('plugin:acfunlive-neotool-audio|add_audio', { audioId: this.#id, audioSourceId });
+  }
+
+  async addAll(audioSourceIdList: AudioSourceId[]): Promise<void> {
+    for (const id of audioSourceIdList) {
+      await this.add(id);
+    }
   }
 
   async volume(): Promise<number> {

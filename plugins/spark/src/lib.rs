@@ -4,6 +4,7 @@ pub use data::*;
 
 use acfunlive_neotool_xunfei::authorization;
 use futures_util::{SinkExt, StreamExt};
+use serde::{Serialize, Serializer};
 use tauri::{
     api::ipc::{format_callback, CallbackFn},
     command,
@@ -19,16 +20,26 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("serde json error: {0}")]
+    #[error(transparent)]
     SerdeJsonError(#[from] serde_json::Error),
-    #[error("tungstenite WebSocket error: {0}")]
+    #[error(transparent)]
     TungsteniteError(#[from] tokio_tungstenite::tungstenite::error::Error),
-    #[error("XunFei error: {0}")]
+    #[error(transparent)]
     XunFeiError(#[from] acfunlive_neotool_xunfei::Error),
     #[error("spark request error: {0}")]
     SparkRequestError(String),
     #[error("spark API error: {0}")]
     SparkApiError(String),
+}
+
+impl Serialize for Error {
+    #[inline]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
 }
 
 pub async fn spark_request<F: FnMut(String)>(
@@ -92,6 +103,7 @@ pub async fn spark_request<F: FnMut(String)>(
     )))
 }
 
+#[inline]
 pub async fn spark_request_full(request: SparkRequest) -> Result<SparkResponse> {
     let mut content = String::new();
     let tokens = spark_request(request, |c| content.push_str(&c)).await?;
@@ -100,23 +112,23 @@ pub async fn spark_request_full(request: SparkRequest) -> Result<SparkResponse> 
 }
 
 #[command]
+#[inline]
 async fn spark_chat<R: Runtime>(
     window: Window<R>,
     request: SparkRequest,
-    callback: CallbackFn,
-) -> std::result::Result<TokenStatistics, String> {
+    cb: CallbackFn,
+) -> Result<TokenStatistics> {
     spark_request(request, |content| {
-        let js = format_callback(callback, &content)
-            .expect("unable to serialize spark response content");
+        let js = format_callback(cb, &content).expect("unable to serialize spark response content");
         let _ = window.eval(&js);
     })
     .await
-    .map_err(|e| e.to_string())
 }
 
 #[command]
-async fn spark_chat_full(request: SparkRequest) -> std::result::Result<SparkResponse, String> {
-    spark_request_full(request).await.map_err(|e| e.to_string())
+#[inline]
+async fn spark_chat_full(request: SparkRequest) -> Result<SparkResponse> {
+    spark_request_full(request).await
 }
 
 /// Initializes the plugin.

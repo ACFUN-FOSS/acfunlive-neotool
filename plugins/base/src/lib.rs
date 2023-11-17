@@ -10,12 +10,15 @@ type Result<T> = std::result::Result<T, Error>;
 
 const CONFIG_FILE: &str = "neotool.app.json";
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, thiserror::Error)]
 enum Error {
     #[error(transparent)]
     IoError(#[from] std::io::Error),
     #[error(transparent)]
     SerdeJsonError(#[from] serde_json::Error),
+    #[error(transparent)]
+    KeyringError(#[from] keyring::Error),
 }
 
 impl Serialize for Error {
@@ -24,7 +27,7 @@ impl Serialize for Error {
     where
         S: Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
 
@@ -107,6 +110,45 @@ async fn symlink_dir(source: String, destination: String) -> Result<()> {
     Ok(())
 }
 
+#[derive(Clone, Debug, Deserialize)]
+struct SecretKey {
+    service: String,
+    user: String,
+    target: Option<String>,
+}
+
+impl SecretKey {
+    #[inline]
+    fn entry(&self) -> Result<keyring::Entry> {
+        Ok(match &self.target {
+            Some(target) => keyring::Entry::new_with_target(target, &self.service, &self.user)?,
+            None => keyring::Entry::new(&self.service, &self.user)?,
+        })
+    }
+}
+
+#[command]
+#[inline]
+fn get_secret_key(key: SecretKey) -> Result<Option<String>> {
+    match key.entry()?.get_password() {
+        Ok(s) => Ok(Some(s)),
+        Err(keyring::Error::NoEntry) => Ok(None),
+        Err(e) => Err(Error::from(e)),
+    }
+}
+
+#[command]
+#[inline]
+fn set_secret_key(key: SecretKey, content: String) -> Result<()> {
+    Ok(key.entry()?.set_password(&content)?)
+}
+
+#[command]
+#[inline]
+fn delete_secret_key(key: SecretKey) -> Result<()> {
+    Ok(key.entry()?.delete_password()?)
+}
+
 /// Initializes the plugin.
 #[inline]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
@@ -115,7 +157,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             load_apps_config,
             canonicalize,
             hash_file_sha256,
-            symlink_dir
+            symlink_dir,
+            get_secret_key,
+            set_secret_key,
+            delete_secret_key
         ])
         .build()
 }

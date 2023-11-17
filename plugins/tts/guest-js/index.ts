@@ -1,5 +1,7 @@
 import { invoke, transformCallback } from '@tauri-apps/api/tauri';
 
+export type AudioSourceId = number;
+
 export type Aue = 'raw' | 'lame';
 
 export type Auf = 'audio8kRate' | 'audio16kRate';
@@ -24,14 +26,22 @@ export type TtsRequest = {
   reg?: Reg;
   rdn?: Rdn;
   text: string;
+  getAllOnce: boolean;
 };
 
 export async function tts(
   request: TtsRequest,
-  callback: (audioSourceId: number) => void
+  callback: (audioSourceId: AudioSourceId) => void
 ): Promise<void> {
-  return await invoke('acfunlive-neotool-tts|tts', {
+  await invoke('plugin:acfunlive-neotool-tts|tts', {
     request,
-    callback: transformCallback(callback)
+    cb: transformCallback(callback)
   });
+}
+
+export async function ttsFull(request: TtsRequest): Promise<AudioSourceId[]> {
+  const idList: AudioSourceId[] = [];
+  await tts(request, (id) => idList.push(id));
+
+  return idList;
 }

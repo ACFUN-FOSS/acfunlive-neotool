@@ -1,0 +1,47 @@
+{
+  "name": "@acfunlive-neotool/ai-chat",
+  "version": "0.1.0",
+  "description": "AI chat in acfunlive-neotool",
+  "keywords": [
+    "svelte",
+    "acfun",
+    "acfunlive"
+  ],
+  "license": "AGPL-3.0-only",
+  "author": "orzogc",
+  "type": "module",
+  "svelte": "src/index.js",
+  "main": "index.js",
+  "scripts": {
+    "dev": "rollup -c -w",
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@acfunlive-neotool/shared": "link:../../packages/shared",
+    "@tauri-apps/api": "^1.5.1",
+    "carbon-components-svelte": "^0.81.3",
+    "carbon-icons-svelte": "^12.3.1",
+    "svelte": "^4.2.3",
+    "tauri-plugin-acfunlive-neotool-audio-api": "link:../../plugins/audio",
+    "tauri-plugin-acfunlive-neotool-base-api": "link:../../plugins/base",
+    "tauri-plugin-acfunlive-neotool-spark-api": "link:../../plugins/spark",
+    "tauri-plugin-acfunlive-neotool-tts-api": "link:../../plugins/tts"
+  },
+  "devDependencies": {
+    "@rollup/plugin-json": "^6.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@types/node": "^20.9.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "rollup": "^4.4.1",
+    "rollup-plugin-scss": "^4.0.0",
+    "rollup-plugin-svelte": "^7.1.6",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "sass": "^1.69.5",
+    "svelte-preprocess": "^5.1.0",
+    "tailwindcss": "^3.3.5",
+    "tslib": "^2.6.2",
+    "typescript": "^5.2.2"
+  },
+  "packageManager": "pnpm@8.10.0"
+}

@@ -14,8 +14,7 @@
 
 <Modal
   bind:open={isOpen}
-  id={forceInputLiverUID ? 'liverUIDDialogHiddenCloseButton' : 'liverUIDDialog'}
-  size="xs"
+  id={forceInputLiverUID ? 'hideCloseButton' : 'liverUIDDialog'}
   modalHeading="AcFun帐号ID"
   primaryButtonText="确定"
   selectorPrimaryFocus="#liverUID"

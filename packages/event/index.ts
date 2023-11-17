@@ -37,8 +37,6 @@ export type Events = {
   backendState: [undefined, SessionState, undefined];
   /** liverUID变化时也会通知 */
   liverUID: [undefined, UserID | undefined, undefined];
-  /* sendMessage: [never, never, ClientMessage<M>];
-  receiveMessage: [keyof M, ClientMessage<M>, never]; */
   userInfo: [UserID | undefined, UserInfo, UserID];
   /** 请求的话会不断获取弹幕 */
   getDanmaku: [UserID | undefined, UserID, UserID];

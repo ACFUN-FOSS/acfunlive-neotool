@@ -133,6 +133,7 @@ pub(crate) struct Response {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TtsRequest {
     pub app_id: String,
     pub api_secret: String,
@@ -147,6 +148,7 @@ pub struct TtsRequest {
     pub reg: Option<Reg>,
     pub rdn: Option<Rdn>,
     pub text: String,
+    pub get_all_once: bool,
 }
 
 impl TryFrom<TtsRequest> for Request {

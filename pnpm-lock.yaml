@@ -33,6 +33,79 @@ importers:
         specifier: ^11.0.0-rc.5
         version: 11.0.0-rc.5
 
+  apps/ai_chat:
+    dependencies:
+      '@acfunlive-neotool/shared':
+        specifier: link:../../packages/shared
+        version: link:../../packages/shared
+      '@tauri-apps/api':
+        specifier: ^1.5.1
+        version: 1.5.1
+      carbon-components-svelte:
+        specifier: ^0.81.3
+        version: 0.81.3
+      carbon-icons-svelte:
+        specifier: ^12.3.1
+        version: 12.3.1
+      svelte:
+        specifier: ^4.2.3
+        version: 4.2.3
+      tauri-plugin-acfunlive-neotool-audio-api:
+        specifier: link:../../plugins/audio
+        version: link:../../plugins/audio
+      tauri-plugin-acfunlive-neotool-base-api:
+        specifier: link:../../plugins/base
+        version: link:../../plugins/base
+      tauri-plugin-acfunlive-neotool-spark-api:
+        specifier: link:../../plugins/spark
+        version: link:../../plugins/spark
+      tauri-plugin-acfunlive-neotool-tts-api:
+        specifier: link:../../plugins/tts
+        version: link:../../plugins/tts
+    devDependencies:
+      '@rollup/plugin-json':
+        specifier: ^6.0.1
+        version: 6.0.1(rollup@4.4.1)
+      '@rollup/plugin-node-resolve':
+        specifier: ^15.2.3
+        version: 15.2.3(rollup@4.4.1)
+      '@types/node':
+        specifier: ^20.9.0
+        version: 20.9.0
+      autoprefixer:
+        specifier: ^10.4.16
+        version: 10.4.16(postcss@8.4.31)
+      postcss:
+        specifier: ^8.4.31
+        version: 8.4.31
+      rollup:
+        specifier: ^4.4.1
+        version: 4.4.1
+      rollup-plugin-scss:
+        specifier: ^4.0.0
+        version: 4.0.0
+      rollup-plugin-svelte:
+        specifier: ^7.1.6
+        version: 7.1.6(rollup@4.4.1)(svelte@4.2.3)
+      rollup-plugin-typescript2:
+        specifier: ^0.36.0
+        version: 0.36.0(rollup@4.4.1)(typescript@5.2.2)
+      sass:
+        specifier: ^1.69.5
+        version: 1.69.5
+      svelte-preprocess:
+        specifier: ^5.1.0
+        version: 5.1.0(postcss@8.4.31)(sass@1.69.5)(svelte@4.2.3)(typescript@5.2.2)
+      tailwindcss:
+        specifier: ^3.3.5
+        version: 3.3.5
+      tslib:
+        specifier: ^2.6.2
+        version: 2.6.2
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
+
   apps/danmaku_keyboard:
     dependencies:
       '@acfunlive-neotool/shared':
@@ -187,10 +260,10 @@ importers:
     devDependencies:
       '@sveltejs/adapter-static':
         specifier: ^2.0.3
-        version: 2.0.3(@sveltejs/kit@1.27.5)
+        version: 2.0.3(@sveltejs/kit@1.27.6)
       '@sveltejs/kit':
-        specifier: ^1.27.5
-        version: 1.27.5(svelte@4.2.3)(vite@4.5.0)
+        specifier: ^1.27.6
+        version: 1.27.6(svelte@4.2.3)(vite@4.5.0)
       svelte-check:
         specifier: ^3.6.0
         version: 3.6.0(postcss-load-config@4.0.1)(postcss@8.4.31)(svelte@4.2.3)
@@ -258,10 +331,10 @@ importers:
     devDependencies:
       '@sveltejs/adapter-static':
         specifier: ^2.0.3
-        version: 2.0.3(@sveltejs/kit@1.27.5)
+        version: 2.0.3(@sveltejs/kit@1.27.6)
       '@sveltejs/kit':
-        specifier: ^1.27.5
-        version: 1.27.5(svelte@4.2.3)(vite@4.5.0)
+        specifier: ^1.27.6
+        version: 1.27.6(svelte@4.2.3)(vite@4.5.0)
       '@tauri-apps/cli':
         specifier: ^1.5.6
         version: 1.5.6
@@ -979,16 +1052,16 @@ packages:
     dev: true
     optional: true
 
-  /@sveltejs/adapter-static@2.0.3(@sveltejs/kit@1.27.5):
+  /@sveltejs/adapter-static@2.0.3(@sveltejs/kit@1.27.6):
     resolution: {integrity: sha512-VUqTfXsxYGugCpMqQv1U0LIdbR3S5nBkMMDmpjGVJyM6Q2jHVMFtdWJCkeHMySc6mZxJ+0eZK3T7IgmUCDrcUQ==}
     peerDependencies:
       '@sveltejs/kit': ^1.5.0
     dependencies:
-      '@sveltejs/kit': 1.27.5(svelte@4.2.3)(vite@4.5.0)
+      '@sveltejs/kit': 1.27.6(svelte@4.2.3)(vite@4.5.0)
     dev: true
 
-  /@sveltejs/kit@1.27.5(svelte@4.2.3)(vite@4.5.0):
-    resolution: {integrity: sha512-+L1WPs/ZYNjXoBFoFARypD4aZOjkT51vFpRCtQI45+Fmmfi4Y0dH/8VFlmYD6VlGe89ViIPg7lgf/JpGQ2tr7A==}
+  /@sveltejs/kit@1.27.6(svelte@4.2.3)(vite@4.5.0):
+    resolution: {integrity: sha512-GsjTkMbKzXdbeRg0tk8S7HNShQ4879ftRr0ZHaZfjbig1xQwG57Bvcm9U9/mpLJtCapLbLWUnygKrgcLISLC8A==}
     engines: {node: ^16.14 || >=18}
     hasBin: true
     requiresBuild: true
@@ -1441,7 +1514,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001562
-      electron-to-chromium: 1.4.582
+      electron-to-chromium: 1.4.583
       node-releases: 2.0.13
       update-browserslist-db: 1.0.13(browserslist@4.22.1)
     dev: true
@@ -1642,8 +1715,8 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /electron-to-chromium@1.4.582:
-    resolution: {integrity: sha512-89o0MGoocwYbzqUUjc+VNpeOFSOK9nIdC5wY4N+PVUarUK0MtjyTjks75AZS2bW4Kl8MdewdFsWaH0jLy+JNoA==}
+  /electron-to-chromium@1.4.583:
+    resolution: {integrity: sha512-93y1gcONABZ7uqYe/JWDVQP/Pj/sQSunF0HVAPdlg/pfBnOyBMLlQUxWvkqcljJg1+W6cjvPuYD+r1Th9Tn8mA==}
     dev: true
 
   /es6-promise@3.3.1:

@@ -2,7 +2,7 @@ import { invoke, transformCallback } from '@tauri-apps/api/tauri';
 
 export type Role = 'user' | 'assistant';
 
-export type RequestText = {
+export type ChatText = {
   role: Role;
   content: string;
 };
@@ -16,7 +16,7 @@ export type SparkRequest = {
   maxTokens?: number;
   topK?: number;
   chatId?: string;
-  history?: RequestText[];
+  history?: ChatText[];
   content: string;
 };
 
@@ -37,7 +37,7 @@ export async function sparkChat(
 ): Promise<TokenStatistics> {
   return await invoke('plugin:acfunlive-neotool-spark|spark_chat', {
     request,
-    callback: transformCallback(callback)
+    cb: transformCallback(callback)
   });
 }
 

@@ -1,0 +1,7 @@
+{
+  "id": "ai_chat",
+  "name": "AI聊天",
+  "description": "AI回复弹幕聊天",
+  "entry": "index.js",
+  "css": "index.css"
+}

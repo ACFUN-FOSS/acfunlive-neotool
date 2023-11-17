@@ -3,7 +3,7 @@ use std::{collections::HashMap, io::Cursor, mem::ManuallyDrop};
 use acfunlive_neotool_audio::{AudioSourceId, AudioSourceManager};
 use once_cell::sync::{Lazy, OnceCell};
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
-use serde::{Deserialize, Serialize};
+use serde::{Serialize, Serializer};
 use tauri::{
     command,
     plugin::{Builder, TauriPlugin},
@@ -19,16 +19,29 @@ static HANDLE: OnceCell<OutputStreamHandle> = OnceCell::new();
 
 type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Deserialize, Serialize, thiserror::Error)]
+#[allow(clippy::enum_variant_names)]
+#[derive(Debug, thiserror::Error)]
 enum Error {
-    #[error("rodio error: {0}")]
-    RodioErr(String),
+    #[error(transparent)]
+    RodioPlayError(#[from] rodio::PlayError),
+    #[error(transparent)]
+    RodioDecoderError(#[from] rodio::decoder::DecoderError),
     #[error("no stream handle")]
     NoStreamHanlde,
     #[error("no audio")]
     NoAudio,
     #[error("no audio source")]
     NoAudioSource,
+}
+
+impl Serialize for Error {
+    #[inline]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
 }
 
 #[inline]
@@ -43,10 +56,10 @@ async fn new_id() -> AudioId {
 struct AudioManager(Mutex<HashMap<AudioId, Sink>>);
 
 #[command]
+#[inline]
 async fn new_audio(manager: State<'_, AudioManager>) -> Result<AudioId> {
     let id = new_id().await;
-    let sink = Sink::try_new(HANDLE.get().ok_or(Error::NoStreamHanlde)?)
-        .map_err(|e| Error::RodioErr(e.to_string()))?;
+    let sink = Sink::try_new(HANDLE.get().ok_or(Error::NoStreamHanlde)?)?;
 
     manager.0.lock().await.insert(id, sink);
 
@@ -54,6 +67,7 @@ async fn new_audio(manager: State<'_, AudioManager>) -> Result<AudioId> {
 }
 
 #[command]
+#[inline]
 async fn delete_audio(manager: State<'_, AudioManager>, audio_id: AudioId) -> Result<()> {
     manager.0.lock().await.remove(&audio_id);
 
@@ -61,6 +75,7 @@ async fn delete_audio(manager: State<'_, AudioManager>, audio_id: AudioId) -> Re
 }
 
 #[command]
+#[inline]
 async fn is_audio_queue_empty(manager: State<'_, AudioManager>, audio_id: AudioId) -> Result<bool> {
     let map = manager.0.lock().await;
 
@@ -84,12 +99,13 @@ async fn add_audio(
     let map = audio_manager.0.lock().await;
     map.get(&audio_id)
         .ok_or(Error::NoAudio)?
-        .append(Decoder::new(Cursor::new(source)).map_err(|e| Error::RodioErr(e.to_string()))?);
+        .append(Decoder::new(Cursor::new(source))?);
 
     Ok(())
 }
 
 #[command]
+#[inline]
 async fn get_volume(manager: State<'_, AudioManager>, audio_id: AudioId) -> Result<f32> {
     let map = manager.0.lock().await;
 
@@ -97,6 +113,7 @@ async fn get_volume(manager: State<'_, AudioManager>, audio_id: AudioId) -> Resu
 }
 
 #[command]
+#[inline]
 async fn set_volume(
     manager: State<'_, AudioManager>,
     audio_id: AudioId,
@@ -109,6 +126,7 @@ async fn set_volume(
 }
 
 #[command]
+#[inline]
 async fn play_audio(manager: State<'_, AudioManager>, audio_id: AudioId) -> Result<()> {
     let map = manager.0.lock().await;
     map.get(&audio_id).ok_or(Error::NoAudio)?.play();
@@ -117,6 +135,7 @@ async fn play_audio(manager: State<'_, AudioManager>, audio_id: AudioId) -> Resu
 }
 
 #[command]
+#[inline]
 async fn pause_audio(manager: State<'_, AudioManager>, audio_id: AudioId) -> Result<()> {
     let map = manager.0.lock().await;
     map.get(&audio_id).ok_or(Error::NoAudio)?.pause();
@@ -125,6 +144,7 @@ async fn pause_audio(manager: State<'_, AudioManager>, audio_id: AudioId) -> Res
 }
 
 #[command]
+#[inline]
 async fn stop_audio(manager: State<'_, AudioManager>, audio_id: AudioId) -> Result<()> {
     let map = manager.0.lock().await;
     map.get(&audio_id).ok_or(Error::NoAudio)?.stop();
@@ -133,6 +153,7 @@ async fn stop_audio(manager: State<'_, AudioManager>, audio_id: AudioId) -> Resu
 }
 
 #[command]
+#[inline]
 async fn clear_audio(manager: State<'_, AudioManager>, audio_id: AudioId) -> Result<()> {
     let map = manager.0.lock().await;
     map.get(&audio_id).ok_or(Error::NoAudio)?.clear();

@@ -155,6 +155,7 @@ impl Response {
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SparkRequest {
     pub app_id: String,
     pub api_secret: String,
@@ -169,6 +170,7 @@ pub struct SparkRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TokenStatistics {
     pub prompt_tokens: u32,
     pub completion_tokens: u32,
@@ -176,6 +178,7 @@ pub struct TokenStatistics {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SparkResponse {
     pub content: String,
     pub tokens: TokenStatistics,
