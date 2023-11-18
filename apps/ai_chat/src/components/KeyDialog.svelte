@@ -52,8 +52,6 @@
 
 <Modal
   bind:open={isOpen}
-  id="hideCloseButton"
-  preventCloseOnClickOutside
   modalHeading={header}
   primaryButtonText="确定"
   selectorPrimaryFocus="#appIdInput"

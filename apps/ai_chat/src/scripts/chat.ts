@@ -145,7 +145,11 @@ async function saveConfig(config: ChatConfig): Promise<void> {
 export async function initConfig(): Promise<Unsubscriber> {
   await loadConfig();
   let isSavingConfig = false;
-  const configUnsubscriber = chatConfig.subscribe(() => {
+  const configUnsubscriber = chatConfig.subscribe((config) => {
+    if (config.volumn >= 0.0) {
+      audio?.setVolume(config.volumn);
+    }
+
     // 延迟2秒保存设置，减少IO
     if (!isSavingConfig) {
       isSavingConfig = true;
@@ -181,7 +185,7 @@ function prompt(contents: string[]): string {
   const config = get(chatConfig);
   const content = contents.join('\n');
 
-  return `现在你是一名主播，需要回复观众的弹幕，直接回复你想要说的话即可，不需要带上名字前缀。
+  return `现在你是一名主播，需要回复观众的弹幕，直接回复你想要说的话即可，回复的前面不要带上你的名字。
 你需要遵循以下的设定：
 ${config.characterSet}
 观众的弹幕：
@@ -189,7 +193,7 @@ ${content}`;
 }
 
 export async function chat(
-  chatContents: ChatContent[],
+  contents: string[],
   callback: (content: string) => void,
   chatId?: string
 ): Promise<string | undefined> {
@@ -204,7 +208,6 @@ export async function chat(
           historyList = history.slice(history.length - historyNum);
         }
 
-        const contents = chatContents.map((content) => content.toContent());
         let reply = '';
 
         chatState.set(ChatState.Chatting);
@@ -216,14 +219,14 @@ export async function chat(
             content: prompt(contents)
           },
           (content) => {
-            if (!(get(chatState) === ChatState.Ignore)) {
+            if (get(chatState) === ChatState.Chatting) {
               reply = reply + content;
               callback(content);
             }
           }
         );
 
-        if (!(get(chatState) === ChatState.Ignore)) {
+        if (get(chatState) === ChatState.Chatting) {
           history.push(
             ...contents.map((content): ChatText => {
               return { role: 'user', content };
@@ -236,7 +239,13 @@ export async function chat(
 
         return;
       } finally {
-        chatState.set(ChatState.Idle);
+        chatState.update((state) => {
+          if (state === ChatState.Disable) {
+            return state;
+          } else {
+            return ChatState.Idle;
+          }
+        });
       }
     } else {
       throw new Error('no spark key');

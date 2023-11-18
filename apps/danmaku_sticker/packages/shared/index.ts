@@ -11,6 +11,8 @@ export enum Direction {
   RightToLeft
 }
 
+export const defaultPrefix = '#';
+
 export const defaultDirection = Direction.RightToLeft;
 
 export const defaultHeight = 150;
@@ -18,6 +20,7 @@ export const defaultHeight = 150;
 export const defaultDuration = 5000;
 
 export class StickerData {
+  prefix: string | undefined | null;
   danmaku: string;
   path: string;
   pathInWeb: string;
@@ -27,6 +30,7 @@ export class StickerData {
   enable: boolean;
 
   constructor(danmaku: string, path: string, pathInWeb: string) {
+    this.prefix = defaultPrefix;
     this.danmaku = danmaku;
     this.path = path;
     this.pathInWeb = pathInWeb;

@@ -3,15 +3,19 @@ import { BaseDirectory, createDir, exists, readTextFile, writeTextFile } from '@
 import { join } from '@tauri-apps/api/path';
 import { type Input, simulate_input } from 'tauri-plugin-acfunlive-neotool-keyboard-api';
 
+const defaultPrefix = '@';
+
 const defaultInterval = 100;
 
 export class KeyData {
+  prefix: string | undefined | null;
   danmaku: string;
   keys: Input[];
   intervals: (number | undefined | null)[];
   enable: boolean;
 
   constructor(danmaku: string, keys: Input[]) {
+    this.prefix = defaultPrefix;
     this.danmaku = danmaku;
     this.keys = keys;
     this.enable = true;
@@ -83,6 +87,12 @@ export async function loadConfig(): Promise<KeyConfig> {
     }
     if (config.keys === undefined || config.keys === null) {
       config.keys = [];
+    } else if (config.keys.length > 0) {
+      config.keys = config.keys.map((key) => {
+        key.prefix ??= defaultPrefix;
+
+        return key;
+      });
     }
 
     return config;
@@ -112,5 +122,8 @@ export function keysToString(keys: Input[]): string {
 }
 
 export function keysToRegex(keys: KeyData[]): RegExp {
-  return new RegExp(keys.map((key) => `@(${key.danmaku})`).join('|'), 'ig');
+  return new RegExp(
+    keys.map((key) => `${key.prefix ?? defaultPrefix}(${key.danmaku})`).join('|'),
+    'ig'
+  );
 }

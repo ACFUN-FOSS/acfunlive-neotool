@@ -21,7 +21,7 @@
     "@acfunlive-neotool/danmaku-sticker-shared": "link:../shared",
     "@acfunlive-neotool/session": "link:../../../../packages/session",
     "acfunlive-backend-js": "github:ACFUN-FOSS/acfunlive-backend-js",
-    "svelte": "^4.2.3"
+    "svelte": "^4.2.5"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^2.0.3",

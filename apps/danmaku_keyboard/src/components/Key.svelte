@@ -14,7 +14,10 @@
 
 <tr>
   <td>
-    <input type="checkbox" bind:checked={key.enable} class="checkbox checkbox-sm" />
+    <input class="checkbox checkbox-sm" type="checkbox" bind:checked={key.enable} />
+  </td>
+  <td>
+    <input class="max-w-[80px]" bind:value={key.prefix} />
   </td>
   <td>{key.danmaku}</td>
   <td
@@ -25,7 +28,14 @@
   <td>
     <div class="flex flex-col space-y-2">
       {#each key.intervals as interval}
-        <input type="number" bind:value={interval} min="0" max="10000000" step="100" />
+        <input
+          class="max-w-[60px]"
+          type="number"
+          bind:value={interval}
+          min="0"
+          max="10000000"
+          step="100"
+        />
       {/each}
     </div>
   </td>

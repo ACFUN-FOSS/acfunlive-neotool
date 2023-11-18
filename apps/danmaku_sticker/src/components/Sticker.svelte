@@ -19,6 +19,9 @@
   <td>
     <input type="checkbox" bind:checked={sticker.enable} class="checkbox checkbox-sm" />
   </td>
+  <td>
+    <input class="max-w-[80px]" bind:value={sticker.prefix} />
+  </td>
   <td>{sticker.danmaku}</td>
   <td><img src={convertFileSrc(sticker.path)} alt="图片" class="max-w-[100px] max-h-[100px]" /></td>
   <td

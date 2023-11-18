@@ -19,17 +19,17 @@
   "dependencies": {
     "@acfunlive-neotool/shared": "link:../../packages/shared",
     "@tauri-apps/api": "^1.5.1",
-    "svelte": "^4.2.3",
+    "svelte": "^4.2.5",
     "tauri-plugin-acfunlive-neotool-keyboard-api": "link:../../plugins/keyboard"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^6.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
-    "@types/node": "^20.9.0",
+    "@types/node": "^20.9.1",
     "autoprefixer": "^10.4.16",
     "daisyui": "^3.9.4",
     "postcss": "^8.4.31",
-    "rollup": "^4.4.1",
+    "rollup": "^4.5.0",
     "rollup-plugin-scss": "^4.0.0",
     "rollup-plugin-svelte": "^7.1.6",
     "rollup-plugin-typescript2": "^0.36.0",

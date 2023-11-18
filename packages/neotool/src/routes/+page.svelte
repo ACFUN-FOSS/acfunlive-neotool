@@ -17,6 +17,7 @@
     SideNavLink,
     SkipToContent,
     Tag,
+    ToastNotification,
     Toggle
   } from 'carbon-components-svelte';
 
@@ -41,6 +42,7 @@
   const userInfoMap = session.userInfoMapReadable;
   const streamInfoMap = session.streamInfoMapReadable;
 
+  let errorMessage: unknown | undefined;
   let errorUnlisten: UnlistenFn | undefined;
 
   function handleError(error: unknown) {
@@ -106,7 +108,7 @@
 
   onMount(async () => {
     try {
-      errorUnlisten = await listen('error', (e) => console.log(`event error: ${e}`), undefined);
+      errorUnlisten = await listen('error', (e) => (errorMessage = e), undefined);
     } catch (e) {
       console.log(`failed to listen event error: ${e}`);
     }
@@ -205,3 +207,14 @@
     }
   }}
 />
+
+{#if errorMessage !== undefined}
+  <div class="absolute top-12 left-1/3">
+    <ToastNotification
+      title="错误"
+      caption={`${errorMessage}`}
+      timeout={3000}
+      on:close={() => (errorMessage = undefined)}
+    ></ToastNotification>
+  </div>
+{/if}

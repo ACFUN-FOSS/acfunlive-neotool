@@ -90,7 +90,7 @@
 </script>
 
 <div class="flex flex-col content-between p-5 space-y-5">
-  <div>说明：弹幕文字前面需要添加 @ 符号来触发</div>
+  <div>说明：弹幕文字前面需要添加对应的前缀来触发</div>
 
   {#if config}
     <div class="flex flex-row space-x-3">
@@ -102,6 +102,7 @@
       <thead>
         <tr>
           <th></th>
+          <th class="text-base">触发弹幕前缀</th>
           <th class="text-base">触发弹幕</th>
           <th class="text-base">触发按键</th>
           <th class="text-base">按键时长（毫秒）</th>

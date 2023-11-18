@@ -18,18 +18,24 @@
     ttsKey
   } from './scripts/chat';
 
-  import { Button, TextArea } from 'carbon-components-svelte';
+  import { Button, Slider, TextArea } from 'carbon-components-svelte';
 
   import KeyDialog from './components/KeyDialog.svelte';
+  import Log from './components/Log.svelte';
 
   import './app.css';
   import appConfigJson from '../neotool.app.json';
 
-  let hasInit = false;
+  //let hasInit = false;
 
   let openSparkKeyDialog = false;
+  let sparkKeyDialogKey = {};
 
   let openTtsKeyDialog = false;
+  let ttsKeyDialogKey = {};
+
+  let openLogDialog = false;
+  let logDialogKey = {};
 
   let cleanups: UnlistenFn[] = [];
 
@@ -39,7 +45,8 @@
 
   let liveID: string | undefined;
 
-  let danmakuList: ChatContent[] = [];
+  let contents: ChatContent[] = [];
+  let danmakuList: string[] = [];
 
   let reply = '';
   let replyList: string[] = [];
@@ -50,6 +57,7 @@
     $chatState = ChatState.Idle;
   } else {
     $chatState = ChatState.Disable;
+    contents = [];
     danmakuList = [];
     reply = '';
     replyList = [];
@@ -57,19 +65,19 @@
     stopAudio().catch((e) => emitError(`failed to stop audio: ${e}`));
   }
 
-  $: console.log('liveID', liveID);
-  $: console.log('chatState', $chatState);
-
-  $: if (enable && liveID && $chatState === ChatState.Idle && danmakuList.length > 0) {
+  $: if (enable && liveID && $chatState === ChatState.Idle && contents.length > 0) {
+    danmakuList = contents.map((content) => content.toContent());
     let isChatting = false;
     chat(
-      [...danmakuList],
+      danmakuList,
       (content) => {
-        if (isChatting) {
-          reply = reply + content;
-        } else {
-          reply = content;
-          isChatting = true;
+        if (enable) {
+          if (isChatting) {
+            reply = reply + content;
+          } else {
+            reply = content;
+            isChatting = true;
+          }
         }
       },
       liveID
@@ -81,7 +89,7 @@
         }
       })
       .catch((e) => emitError(`AI chat error: ${e}`));
-    danmakuList = [];
+    contents = [];
   }
 
   let isTts = false;
@@ -135,10 +143,10 @@
           'danmaku',
           (danmaku) => {
             if (enable && danmaku.liverUID === liverUID) {
-              danmakuList.push(
+              contents.push(
                 new ChatContent(danmaku.data.danmuInfo.userInfo.nickname, danmaku.data.content)
               );
-              danmakuList = danmakuList;
+              contents = contents;
             }
           },
           undefined
@@ -148,7 +156,7 @@
       await request('appData', appConfigJson.id);
       await request('liverUID', undefined);
 
-      hasInit = true;
+      //hasInit = true;
     } catch (e) {
       await emitError(`${appConfigJson.id} init error: ${e}`);
     }
@@ -173,19 +181,57 @@
       <div class="text-red-600">请设置讯飞语音</div>
     {/if}
     <div>
-      <Button on:click={() => (openSparkKeyDialog = true)}>设置讯飞星火</Button>
-      <Button on:click={() => (openTtsKeyDialog = true)}>设置讯飞语音</Button>
+      <Button
+        on:click={() => {
+          openSparkKeyDialog = true;
+          sparkKeyDialogKey = {};
+        }}>设置讯飞星火</Button
+      >
+      <Button
+        on:click={() => {
+          openTtsKeyDialog = true;
+          ttsKeyDialogKey = {};
+        }}>设置讯飞语音</Button
+      >
     </div>
   </div>
   <div class="pt-4">
-    <TextArea labelText="AI人设" bind:value={$chatConfig.characterSet}></TextArea>
+    <TextArea
+      labelText="AI人设（越详细越好，但最好不要超过一千字）"
+      bind:value={$chatConfig.characterSet}
+    ></TextArea>
   </div>
-  <div class="pt-4">
-    <TextArea readonly labelText="AI回复" bind:value={reply}></TextArea>
+  <div class="flex flex-col space-y-4 pt-4">
+    <TextArea readonly labelText="弹幕" rows={2} value={danmakuList.join('\n')}></TextArea>
+    <TextArea readonly labelText="AI回复" value={reply}></TextArea>
+    <div class="flex flex-row">
+      <Slider
+        hideTextInput
+        labelText="音量"
+        value={$chatConfig.volumn * 50}
+        on:change={(e) => {
+          const volumn = e.detail;
+          if (typeof volumn === 'number') {
+            $chatConfig.volumn = volumn / 50;
+          }
+        }}
+      ></Slider>
+      <!-- <Button on:click={() => (enable = !enable)}>{enable ? '停止AI聊天' : '开始AI聊天'}</Button> -->
+      <Button
+        disabled={$chatState !== ChatState.Chatting}
+        on:click={() => ($chatState = ChatState.Ignore)}>忽略本次生成</Button
+      >
+      <Button
+        on:click={() => {
+          openLogDialog = true;
+          logDialogKey = {};
+        }}>记录</Button
+      >
+    </div>
   </div>
 </div>
 
-{#if hasInit}
+{#key sparkKeyDialogKey}
   <KeyDialog
     bind:isOpen={openSparkKeyDialog}
     header="讯飞星火模型"
@@ -194,7 +240,9 @@
     apiKey={$sparkKey?.apiKey}
     on:key={(e) => setSparkKey(e.detail)}
   ></KeyDialog>
+{/key}
 
+{#key ttsKeyDialogKey}
   <KeyDialog
     bind:isOpen={openTtsKeyDialog}
     header="讯飞语音"
@@ -205,4 +253,8 @@
     on:key={(e) => setTtsKey(e.detail)}
     on:vcn={(e) => ($chatConfig.vcn = e.detail)}
   ></KeyDialog>
-{/if}
+{/key}
+
+{#key logDialogKey}
+  <Log bind:isOpen={openLogDialog}></Log>
+{/key}

@@ -1,5 +1,6 @@
 import {
   defaultDuration,
+  defaultPrefix,
   type Direction,
   type StickerData
 } from '@acfunlive-neotool/danmaku-sticker-shared';
@@ -104,5 +105,8 @@ export function removeDanmaku(id: number): void {
 }
 
 export function stickersToRegex(stickers: StickerData[]): RegExp {
-  return new RegExp(stickers.map((sticker) => `#(${sticker.danmaku})`).join('|'), 'ig');
+  return new RegExp(
+    stickers.map((sticker) => `${sticker.prefix ?? defaultPrefix}(${sticker.danmaku})`).join('|'),
+    'ig'
+  );
 }

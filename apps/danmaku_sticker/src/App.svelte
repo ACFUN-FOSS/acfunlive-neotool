@@ -203,7 +203,7 @@
 </script>
 
 <div class="flex flex-col content-between p-5 space-y-5">
-  <div>说明：弹幕文字前面需要添加 # 符号来触发</div>
+  <div>说明：弹幕文字前面需要添加对应的前缀来触发</div>
   <div>在OBS里添加网页 http://localhost:25360/</div>
 
   {#if config}
@@ -211,6 +211,7 @@
       <thead>
         <tr>
           <th></th>
+          <th class="text-base">触发弹幕前缀</th>
           <th class="text-base">触发弹幕</th>
           <th class="text-base">图片</th>
           <th class="text-base">方向</th>

@@ -1,4 +1,4 @@
-import type { StickerConfig } from '@acfunlive-neotool/danmaku-sticker-shared';
+import { defaultPrefix, type StickerConfig } from '@acfunlive-neotool/danmaku-sticker-shared';
 import { open } from '@tauri-apps/api/dialog';
 import {
   BaseDirectory,
@@ -27,6 +27,12 @@ export async function loadConfig(): Promise<StickerConfig> {
     const config: StickerConfig = JSON.parse(await readTextFile(path, configFsOption));
     if (config.stickers === undefined || config.stickers === null) {
       config.stickers = [];
+    } else if (config.stickers.length > 0) {
+      config.stickers = config.stickers.map((s) => {
+        s.prefix ??= defaultPrefix;
+
+        return s;
+      });
     }
 
     return config;
