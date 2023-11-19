@@ -5,3 +5,11 @@
 #hideCloseButton .bx--modal-close {
   display: none;
 }
+
+span.bx--side-nav__link-text {
+  width: 100%;
+}
+
+button.bx--header__menu-trigger.bx--header__menu-toggle {
+  display: none;
+}

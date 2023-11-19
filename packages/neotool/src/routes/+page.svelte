@@ -27,7 +27,6 @@
 
   export let data: LayoutData;
 
-  let openSideNav = false;
   let openUIDDialog = false;
   let openPanel = false;
   let selectedApp: number | undefined;
@@ -125,7 +124,7 @@
   });
 </script>
 
-<Header bind:isSideNavOpen={openSideNav} company="AcFun" platformName="Neo 直播工具箱">
+<Header isSideNavOpen={true} company="AcFun" platformName="Neo 直播工具箱">
   <svelte:fragment slot="skip-to-content">
     <SkipToContent />
   </svelte:fragment>
@@ -153,13 +152,18 @@
   </HeaderUtilities>
 </Header>
 
-<SideNav bind:isOpen={openSideNav} rail>
+<SideNav isOpen={true} fixed>
   <SideNavItems>
     {#each appConfigs as appConfig, i (appConfig.id)}
-      <SideNavLink isSelected={selectedApp === i} on:click={() => (selectedApp = i)}>
-        <div class="flex flex-row items-center space-x-4">
-          <div>{appConfig.name}</div>
+      <SideNavLink
+        class="hover:cursor-pointer"
+        isSelected={selectedApp === i}
+        on:click={() => (selectedApp = i)}
+      >
+        <div class="flex flex-row items-center">
+          <div class="flex-1">{appConfig.name}</div>
           <Toggle
+            class="flex-none"
             size="sm"
             hideLabel
             labelA=""
