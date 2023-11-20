@@ -5,7 +5,8 @@
   import {
     chat,
     chatConfig,
-    ChatContent,
+    ChatDanmaku,
+    ChatGift,
     chatState,
     ChatState,
     initConfig,
@@ -15,18 +16,17 @@
     stopAudio,
     playAudio,
     textToSpeech,
-    ttsKey
+    ttsKey,
+    ChatContent
   } from './scripts/chat';
 
-  import { Button, Slider, TextArea } from 'carbon-components-svelte';
+  import { Button, Checkbox, Slider, TextArea } from 'carbon-components-svelte';
 
   import KeyDialog from './components/KeyDialog.svelte';
   import Log from './components/Log.svelte';
 
   import './app.css';
   import appConfigJson from '../neotool.app.json';
-
-  //let hasInit = false;
 
   let openSparkKeyDialog = false;
   let sparkKeyDialogKey = {};
@@ -47,6 +47,7 @@
 
   let contents: ChatContent[] = [];
   let danmakuList: string[] = [];
+  let giftCombo: Map<string, any> = new Map();
 
   let reply = '';
   let replyList: string[] = [];
@@ -66,10 +67,10 @@
   }
 
   $: if (enable && liveID && $chatState === ChatState.Idle && contents.length > 0) {
-    danmakuList = contents.map((content) => content.toContent());
+    danmakuList = contents.map((content) => content.toString());
     let isChatting = false;
     chat(
-      danmakuList,
+      contents,
       (content) => {
         if (enable) {
           if (isChatting) {
@@ -143,10 +144,33 @@
           'danmaku',
           (danmaku) => {
             if (enable && danmaku.liverUID === liverUID) {
-              contents.push(
-                new ChatContent(danmaku.data.danmuInfo.userInfo.nickname, danmaku.data.content)
-              );
+              contents.push(new ChatDanmaku(danmaku.data));
               contents = contents;
+            }
+          },
+          undefined
+        ),
+        await listen(
+          'gift',
+          (gift) => {
+            const giftLiverUID = gift.liverUID;
+            if (enable && $chatConfig.thanksGift && giftLiverUID === liverUID) {
+              const comboID = gift.data.comboID;
+              const chatGift = new ChatGift(gift.data);
+              const timeoutID = giftCombo.get(comboID);
+              if (timeoutID !== undefined) {
+                clearTimeout(timeoutID);
+              }
+              giftCombo.set(
+                comboID,
+                setTimeout(() => {
+                  if (enable && $chatConfig.thanksGift && giftLiverUID === liverUID) {
+                    contents.push(chatGift);
+                    contents = contents;
+                  }
+                  giftCombo.delete(comboID);
+                }, 3500)
+              );
             }
           },
           undefined
@@ -155,8 +179,6 @@
 
       await request('appData', appConfigJson.id);
       await request('liverUID', undefined);
-
-      //hasInit = true;
     } catch (e) {
       await emitError(`${appConfigJson.id} init error: ${e}`);
     }
@@ -173,14 +195,14 @@
 </script>
 
 <div class="flex flex-col space-y-4 divide-y divide-dashed">
-  <div>
+  <div class="flex flex-col space-y-4">
     {#if $sparkKey === undefined}
       <div class="text-red-600">请设置讯飞星火模型</div>
     {/if}
     {#if $ttsKey === undefined}
       <div class="text-red-600">请设置讯飞语音</div>
     {/if}
-    <div>
+    <div class="flex flex-row space-x-4">
       <Button
         on:click={() => {
           openSparkKeyDialog = true;
@@ -193,6 +215,9 @@
           ttsKeyDialogKey = {};
         }}>设置讯飞语音</Button
       >
+    </div>
+    <div>
+      <Checkbox bind:checked={$chatConfig.thanksGift} labelText="AI感谢礼物"></Checkbox>
     </div>
   </div>
   <div class="pt-4">
@@ -216,7 +241,11 @@
           }
         }}
       ></Slider>
-      <!-- <Button on:click={() => (enable = !enable)}>{enable ? '停止AI聊天' : '开始AI聊天'}</Button> -->
+      <Slider
+        hideTextInput
+        labelText="语速（改变后在下一个语音生效）"
+        bind:value={$chatConfig.speed}
+      ></Slider>
       <Button
         disabled={$chatState !== ChatState.Chatting}
         on:click={() => ($chatState = ChatState.Ignore)}>忽略本次生成</Button

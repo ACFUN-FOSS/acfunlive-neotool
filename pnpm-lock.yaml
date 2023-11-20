@@ -41,6 +41,9 @@ importers:
       '@tauri-apps/api':
         specifier: ^1.5.1
         version: 1.5.1
+      acfunlive-backend-js:
+        specifier: github:ACFUN-FOSS/acfunlive-backend-js
+        version: github.com/ACFUN-FOSS/acfunlive-backend-js/e65f871ae837039e85f799fb7fb10e2634778e35(rescript@11.0.0-rc.5)(tauri-plugin-websocket-api@0.0.0)
       carbon-components-svelte:
         specifier: ^0.81.3
         version: 0.81.3
@@ -341,6 +344,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.16
         version: 10.4.16(postcss@8.4.31)
+      daisyui:
+        specifier: ^3.9.4
+        version: 3.9.4
       postcss:
         specifier: ^8.4.31
         version: 8.4.31

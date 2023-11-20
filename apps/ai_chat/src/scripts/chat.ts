@@ -1,6 +1,7 @@
 import { emitError } from '@acfunlive-neotool/shared';
 import { BaseDirectory, createDir, exists, readTextFile, writeTextFile } from '@tauri-apps/api/fs';
 import { join } from '@tauri-apps/api/path';
+import type { comment, gift } from 'acfunlive-backend-js/types';
 import { get, writable, type Writable, type Unsubscriber } from 'svelte/store';
 import { Audio } from 'tauri-plugin-acfunlive-neotool-audio-api';
 import { SecretKeyEntry } from 'tauri-plugin-acfunlive-neotool-base-api';
@@ -15,8 +16,10 @@ export type XunFeiKey = {
 
 export type ChatConfig = {
   vcn: string;
+  thanksGift: boolean;
   characterSet: string;
   volumn: number;
+  speed: number;
 };
 
 export enum ChatState {
@@ -26,18 +29,55 @@ export enum ChatState {
   Ignore
 }
 
-export class ChatContent {
+export enum ChatType {
+  Danmaku,
+  Gift
+}
+
+export interface ChatContent {
+  type(): ChatType;
+
+  toString(): string;
+}
+
+export class ChatDanmaku implements ChatContent {
   readonly user: string;
 
   readonly content: string;
 
-  constructor(user: string, content: string) {
-    this.user = user;
-    this.content = content;
+  constructor(danmaku: comment) {
+    this.user = danmaku.danmuInfo.userInfo.nickname;
+    this.content = danmaku.content;
   }
 
-  toContent(): string {
+  type(): ChatType {
+    return ChatType.Danmaku;
+  }
+
+  toString(): string {
     return `“${this.user}”说：“${this.content}”`;
+  }
+}
+
+export class ChatGift implements ChatContent {
+  readonly user: string;
+
+  readonly giftName: string;
+
+  readonly giftCount: number;
+
+  constructor(gift: gift) {
+    this.user = gift.danmuInfo.userInfo.nickname;
+    this.giftName = gift.giftDetail.giftName;
+    this.giftCount = gift.count * gift.combo;
+  }
+
+  type(): ChatType {
+    return ChatType.Gift;
+  }
+
+  toString(): string {
+    return `“${this.user}”送出了${this.giftCount}个${this.giftName}`;
   }
 }
 
@@ -55,8 +95,10 @@ const historyNum = 10;
 
 const defaultConfig: ChatConfig = {
   vcn: 'xiaoyan',
+  thanksGift: true,
   characterSet: '你是一只可爱迷人的狐狸娘，名字叫林梦仙',
-  volumn: 1.0
+  volumn: 1.0,
+  speed: 50
 };
 
 export const sparkKey: Writable<XunFeiKey | undefined> = writable(undefined);
@@ -122,11 +164,22 @@ async function loadConfig(): Promise<void> {
     if (!config.vcn) {
       config.vcn = defaultConfig.vcn;
     }
+    if (config.thanksGift === undefined || config.thanksGift === null) {
+      config.thanksGift = defaultConfig.thanksGift;
+    }
     if (!config.characterSet) {
       config.characterSet = defaultConfig.characterSet;
     }
     if (config.volumn === undefined || config.volumn === null || config.volumn < 0.0) {
       config.volumn = defaultConfig.volumn;
+    }
+    if (
+      config.speed === undefined ||
+      config.speed === null ||
+      config.speed < 0 ||
+      config.speed > 100
+    ) {
+      config.speed = defaultConfig.speed;
     }
 
     chatConfig.set(config);
@@ -181,19 +234,36 @@ export async function initConfig(): Promise<Unsubscriber> {
   };
 }
 
-function prompt(contents: string[]): string {
+function prompt(contents: ChatContent[]): string {
   const config = get(chatConfig);
-  const content = contents.join('\n');
+  const danmaku = contents
+    .filter((content) => content.type() === ChatType.Danmaku)
+    .map((content) => content.toString())
+    .join('\n');
+  const gift = contents
+    .filter((content) => content.type() === ChatType.Gift)
+    .map((content) => content.toString())
+    .join('\n');
 
-  return `现在你是一名主播，需要回复观众的弹幕，直接回复你想要说的话即可，回复的前面不要带上你的名字。
+  return (
+    `现在你是一名主播，需要回复观众的弹幕，直接回复你想要说的话即可，回复的前面不要加上你的名字，回复不要采用你的名字说的形式。
 你需要遵循以下的设定：
-${config.characterSet}
+${config.characterSet}` +
+    (gift.length > 0
+      ? `
+观众送出的礼物：
+${gift}`
+      : '') +
+    (danmaku.length > 0
+      ? `
 观众的弹幕：
-${content}`;
+${danmaku}`
+      : '')
+  );
 }
 
 export async function chat(
-  contents: string[],
+  contents: ChatContent[],
   callback: (content: string) => void,
   chatId?: string
 ): Promise<string | undefined> {
@@ -227,12 +297,15 @@ export async function chat(
         );
 
         if (get(chatState) === ChatState.Chatting) {
-          history.push(
-            ...contents.map((content): ChatText => {
-              return { role: 'user', content };
-            })
-          );
-          history.push({ role: 'assistant', content: reply });
+          const danmakus = contents.filter((content) => content.type() === ChatType.Danmaku);
+          if (danmakus.length > 0) {
+            history.push(
+              ...danmakus.map((danmaku): ChatText => {
+                return { role: 'user', content: danmaku.toString() };
+              })
+            );
+            history.push({ role: 'assistant', content: reply });
+          }
 
           return reply;
         }
@@ -258,7 +331,9 @@ export async function textToSpeech(
   callback: (id: AudioSourceId) => void
 ): Promise<void> {
   const key = get(ttsKey);
-  const vcn = get(chatConfig).vcn;
+  const config = get(chatConfig);
+  const vcn = config.vcn;
+  const speed = config.speed;
   if (
     key &&
     key.appId.length > 0 &&
@@ -272,6 +347,7 @@ export async function textToSpeech(
           ...key,
           aue: 'lame',
           vcn,
+          speed,
           text: content,
           getAllOnce: true
         },
